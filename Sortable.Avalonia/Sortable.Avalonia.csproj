@@ -5,13 +5,13 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <Title>Sortable.Avalonia</Title>
-        <Authors>russkyc</Authors>
+        <Authors>Enhakiel</Authors>
         <Description>Drag-and-drop sorting and cross-collection transfer behaviors for Avalonia ItemsControl. Supports reordering, cross-collection transfers, reversible drops, drag handles, sort/swap modes, and animated programmatic updates. Mouse + touch support on Windows, macOS, Linux.</Description>
-        <Copyright>russkyc</Copyright>
-        <PackageProjectUrl>https://github.com/russkyc/sortable-avalonia</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
+        <Copyright>Enhakiel</Copyright>
+        <PackageProjectUrl>https://github.com/Enhakiel/sortable-avalonia</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Enhakiel/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageId>Sortable.Avalonia</PackageId>
+        <PackageId>Enhakiel.Sortable.Avalonia</PackageId>
         <Version>1.0.0</Version>
         <PackageReleaseNotes>First stable release: Drag-and-drop sorting, cross-collection transfers, reversible drops, drag handles, sort/swap modes, animated programmatic updates, mouse and touch support.</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
