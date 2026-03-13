@@ -542,7 +542,7 @@ public partial class Sortable
 
             // FLIP: paint the inverted transform first, then animate back to identity.
             child.Transitions = null;
-            child.RenderTransform = TransformOperations.Parse($"translateX({shiftX.ToString(System.Globalization.CultureInfo.InvariantCulture)}px) translateY({shiftY.ToString(System.Globalization.CultureInfo.InvariantCulture)}px)");
+            child.RenderTransform = TransformOperations.Parse($"translateX({shiftX}px) translateY({shiftY}px)");
 
             Dispatcher.UIThread.Post(
                 () =>
@@ -1378,7 +1378,7 @@ public partial class Sortable
         if (durationMs <= 0)
         {
             child.Transitions = null;
-            child.RenderTransform = TransformOperations.Parse($"translateX({shiftX.ToString(System.Globalization.CultureInfo.InvariantCulture)}px) translateY({shiftY.ToString(System.Globalization.CultureInfo.InvariantCulture)}px)");
+            child.RenderTransform = TransformOperations.Parse($"translateX({shiftX}px) translateY({shiftY}px)");
             return;
         }
 
@@ -1391,7 +1391,7 @@ public partial class Sortable
                 Easing = new CubicEaseOut()
             }
         };
-        child.RenderTransform = TransformOperations.Parse($"translateX({shiftX.ToString(System.Globalization.CultureInfo.InvariantCulture)}px) translateY({shiftY.ToString(System.Globalization.CultureInfo.InvariantCulture)}px)");
+        child.RenderTransform = TransformOperations.Parse($"translateX({shiftX}px) translateY({shiftY}px)");
     }
 
     private static Rect CalculateNextSlotPosition()
