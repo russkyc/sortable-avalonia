@@ -1,8 +1,10 @@
-name: Publish to GitHub Packages
+name: Publish to GitHub and NuGet
 
 on:
   push:
     tags: ['v*']
+    branches:
+      - master
 
 jobs:
   publish:
@@ -13,14 +15,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.x'
+          source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pack
         run: dotnet pack --configuration Release -o nupkgs
 
       - name: Push to GitHub Packages
-        run: dotnet nuget push nupkgs/*.nupkg
-          --api-key ${{ secrets.GITHUB_TOKEN }}
-          --source "https://nuget.pkg.github.com/Enhakiel/index.json"
+        run: |
+          dotnet nuget push nupkgs/*.nupkg \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --skip-duplicate
+
+      - name: Push to NuGet.org
+        run: |
+          dotnet nuget push nupkgs/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate
