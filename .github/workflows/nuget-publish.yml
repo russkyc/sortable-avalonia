@@ -20,8 +20,8 @@ jobs:
         with:
           dotnet-version: '10.x'
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
-          env:
-            NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pack
         run: dotnet pack --configuration Release -o nupkgs
