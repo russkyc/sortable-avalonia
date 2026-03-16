@@ -12,8 +12,8 @@
         <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Sortable.Avalonia</PackageId>
-        <Version>2.0.0</Version>
-        <PackageReleaseNotes>Breaking: Change animation duration to timespan instead of int representing milliseconds. Feature: Add support for release behavior/release command invocation.</PackageReleaseNotes>
+        <Version>2.0.1</Version>
+        <PackageReleaseNotes>Breaking: Change animation duration to timespan instead of int representing milliseconds. Feature: Add support for release behavior/release command invocation (fixed).</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 

@@ -37,7 +37,7 @@
                 CornerRadius="8">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto">
                     <ItemsControl
-                        Background="Red"
+                        sortable:Sortable.ReleaseCommand="{Binding ItemReleaseCommand}"
                         sortable:Sortable.Sortable="True"
                         sortable:Sortable.UpdateCommand="{Binding ItemUpdatedCommand}"
                         ItemsSource="{Binding HorizontalItems}">

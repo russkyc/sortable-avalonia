@@ -963,8 +963,13 @@ public partial class Sortable
 
         var position = e.GetPosition(topLevel);
         var hoveredElements = topLevel?.GetVisualsAt(position) ?? [];
-        _outsideDroppableAndSortableBounds = hoveredElements.All(
-            t => (t.GetType() != typeof(ItemsControl) || t != _originalItemsControl) && t.FindAncestorOfType<ItemsControl>() == null);
+        _outsideDroppableAndSortableBounds = hoveredElements.All(t => 
+        {
+            var itemsControl = t.FindAncestorOfType<ItemsControl>();
+            if (itemsControl == null) return t != _originalItemsControl;
+            // A different ItemsControl, and is not droppable
+            return itemsControl != _originalItemsControl && !GetDroppable(itemsControl);
+        });
     }
 
     private static ItemsControl? FindHoveredItemsControl(PointerEventArgs e)

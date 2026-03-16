@@ -41,6 +41,13 @@ public partial class HorizontalStackDemoViewModel : DemoViewModelBase
     ];
 
     [RelayCommand]
+    private void OnItemRelease(SortableReleaseEventArgs e)
+    {
+        if (e.Item is not  SortableItem item) return;
+        LogEvent("ℹ️", $"'{item.Name}' released without dropping");
+    }
+
+    [RelayCommand]
     private void OnSortHorizontalItemsProgrammatically()
     {
         if (HorizontalItems.Count > 0)
