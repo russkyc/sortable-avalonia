@@ -12,8 +12,8 @@
         <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Sortable.Avalonia</PackageId>
-        <Version>1.0.1</Version>
-        <PackageReleaseNotes>Fix decimal separator bug with other cultures by @Enhakiel</PackageReleaseNotes>
+        <Version>1.1.0</Version>
+        <PackageReleaseNotes>Add support for release behavior/release command invocation.</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 
