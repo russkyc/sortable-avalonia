@@ -355,9 +355,9 @@ public partial class Sortable
             return;
         }
 
-        var travelDurationMs = GetAnimationDurationMs(targetItemsControl) > 0 
-            ? GetAnimationDurationMs(targetItemsControl) 
-            : GetAnimationDurationMs(snapshot.SourceItemsControl);
+        var travelDuration = GetAnimationDurationSpan(targetItemsControl) > TimeSpan.Zero
+            ? GetAnimationDurationSpan(targetItemsControl)
+            : GetAnimationDurationSpan(snapshot.SourceItemsControl);
 
         var topLevel = TopLevel.GetTopLevel(targetItemsControl) ?? TopLevel.GetTopLevel(snapshot.SourceItemsControl);
         if (topLevel == null)
@@ -410,19 +410,19 @@ public partial class Sortable
             new DoubleTransition
             {
                 Property = Canvas.LeftProperty,
-                Duration = TimeSpan.FromMilliseconds(travelDurationMs),
+                Duration = travelDuration,
                 Easing = new CubicEaseOut()
             },
             new DoubleTransition
             {
                 Property = Canvas.TopProperty,
-                Duration = TimeSpan.FromMilliseconds(travelDurationMs),
+                Duration = travelDuration,
                 Easing = new CubicEaseOut()
             },
             new DoubleTransition
             {
                 Property = Visual.OpacityProperty,
-                Duration = TimeSpan.FromMilliseconds(travelDurationMs),
+                Duration = travelDuration,
                 Easing = new CubicEaseOut()
             }
         };
@@ -439,7 +439,7 @@ public partial class Sortable
                     new DoubleTransition
                     {
                         Property = Visual.OpacityProperty,
-                        Duration = TimeSpan.FromMilliseconds(travelDurationMs * 0.46),
+                        Duration = TimeSpan.FromMilliseconds(travelDuration.TotalMilliseconds * 0.46),
                         Easing = new CubicEaseOut()
                     }
                 };
@@ -453,7 +453,7 @@ public partial class Sortable
                 overlayLayer.Children.Remove(overlay);
                 bitmap?.Dispose();
             },
-            TimeSpan.FromMilliseconds(travelDurationMs + 40));
+            travelDuration + TimeSpan.FromMilliseconds(40));
     }
 
     private static IBrush CreateProgrammaticGhostBrush(Control previewVisual, TopLevel topLevel, out RenderTargetBitmap? bitmap)
@@ -520,7 +520,7 @@ public partial class Sortable
             return;
         }
 
-        var animationDurationMs = GetAnimationDurationMs(itemsControl);
+        var animationDuration = GetAnimationDurationSpan(itemsControl);
         var nowBounds = CaptureItemBounds(itemsControl);
 
         foreach (var child in panel.Children.OfType<ContentPresenter>())
@@ -555,7 +555,7 @@ public partial class Sortable
                         new TransformOperationsTransition
                         {
                             Property = Visual.RenderTransformProperty,
-                            Duration = TimeSpan.FromMilliseconds(animationDurationMs),
+                            Duration = animationDuration,
                             Easing = new CubicEaseOut()
                         }
                     };
@@ -1256,7 +1256,7 @@ public partial class Sortable
 
     private static void UpdatePreviewLayout()
     {
-        var animationDuration = GetAnimationDurationMs(_currentItemsControl);
+        var animationDuration = GetAnimationDurationSpan(_currentItemsControl);
         bool isCrossSwap = IsCrossCollectionSwapMode();
 
         for (int i = 0; i < LogicalChildren.Count; i++)
@@ -1361,7 +1361,7 @@ public partial class Sortable
     }
 
     private static void ApplyPreviewTransform(ContentPresenter child, int currentSlotIndex, int previewSlotIndex,
-        int durationMs)
+        TimeSpan duration)
     {
         // Validate current index is within bounds
         if (currentSlotIndex < 0 || currentSlotIndex >= SlotBounds.Count)
@@ -1390,7 +1390,7 @@ public partial class Sortable
         var shiftX = targetSlot.X - currentSlot.X;
         var shiftY = targetSlot.Y - currentSlot.Y;
 
-        if (durationMs <= 0)
+        if (duration <= TimeSpan.Zero)
         {
             child.Transitions = null;
             child.RenderTransform = TransformOperations.Parse($"translateX({shiftX.ToString(System.Globalization.CultureInfo.InvariantCulture)}px) translateY({shiftY.ToString(System.Globalization.CultureInfo.InvariantCulture)}px)");
@@ -1402,7 +1402,7 @@ public partial class Sortable
             new TransformOperationsTransition
             {
                 Property = Visual.RenderTransformProperty,
-                Duration = TimeSpan.FromMilliseconds(durationMs),
+                Duration = duration,
                 Easing = new CubicEaseOut()
             }
         };

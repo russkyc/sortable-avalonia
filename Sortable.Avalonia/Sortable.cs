@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -235,33 +236,36 @@ public partial class Sortable
     public static void SetIsDragHandle(Control element, bool value) => element.SetValue(IsDragHandleProperty, value);
 
     /// <summary>
-    /// Duration in milliseconds used for all sortable animations including:
+    /// Duration used for all sortable animations including:
     /// - Interactive drag preview animations (items shifting during drag)
     /// - Programmatic layout animations (collection changes)
     /// - Cross-collection travel animations
     /// </summary>
-    public static readonly AttachedProperty<int> AnimationDurationProperty =
-        AvaloniaProperty.RegisterAttached<Sortable, ItemsControl, int>(
+    public static readonly AttachedProperty<TimeSpan> AnimationDurationProperty =
+        AvaloniaProperty.RegisterAttached<Sortable, ItemsControl, TimeSpan>(
             "AnimationDuration",
-            defaultValue: DefaultAnimationDurationMs);
+            defaultValue: DefaultAnimationDuration);
 
     /// <summary>
-    /// Gets the animation duration in milliseconds for the specified <see cref="ItemsControl"/>.
+    /// Gets the animation duration for the specified <see cref="ItemsControl"/>.
     /// </summary>
-    public static int GetAnimationDuration(ItemsControl element) =>
-        NormalizeAnimationDuration(element.GetValue(AnimationDurationProperty), DefaultAnimationDurationMs);
+    public static TimeSpan GetAnimationDuration(ItemsControl element)
+    {
+        var value = element.GetValue(AnimationDurationProperty);
+        return value >= MinimumAnimationDuration ? value : DefaultAnimationDuration;
+    }
 
     /// <summary>
-    /// Sets the animation duration in milliseconds for the specified <see cref="ItemsControl"/>.
+    /// Sets the animation duration for the specified <see cref="ItemsControl"/>.
     /// </summary>
-    public static void SetAnimationDuration(ItemsControl element, int value) =>
-        element.SetValue(
-            AnimationDurationProperty,
-            NormalizeAnimationDuration(value, DefaultAnimationDurationMs));
+    public static void SetAnimationDuration(ItemsControl element, TimeSpan value)
+    {
+        element.SetValue(AnimationDurationProperty, value >= MinimumAnimationDuration ? value : DefaultAnimationDuration);
+    }
 
     private const double PlaceholderOpacity = 0.5;
-    private const int DefaultAnimationDurationMs = 250;
-    private const int MinimumAnimationDurationMs = 1;
+    private static readonly TimeSpan DefaultAnimationDuration = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan MinimumAnimationDuration = TimeSpan.FromMilliseconds(1);
     private const int ProgrammaticPairingWindowMs = 750;
 
     // Tracks Sortable-enabled ItemsControls so programmatic ItemsSource changes can be animated.
@@ -300,18 +304,12 @@ public partial class Sortable
     private static Panel? _currentPanel;
     private static bool _isSortableOnly; // True if source is IsSortable-enabled (allows same-collection sort)
 
-    private static int GetAnimationDurationMs(ItemsControl? itemsControl)
+    private static TimeSpan GetAnimationDurationSpan(ItemsControl? itemsControl)
     {
-        return itemsControl == null
-            ? DefaultAnimationDurationMs
-            : NormalizeAnimationDuration(
-                itemsControl.GetValue(AnimationDurationProperty),
-                DefaultAnimationDurationMs);
-    }
-
-    private static int NormalizeAnimationDuration(int value, int fallback)
-    {
-        return value >= MinimumAnimationDurationMs ? value : fallback;
+        if (itemsControl == null)
+            return DefaultAnimationDuration;
+        var value = itemsControl.GetValue(AnimationDurationProperty);
+        return value >= MinimumAnimationDuration ? value : DefaultAnimationDuration;
     }
 
     static Sortable()

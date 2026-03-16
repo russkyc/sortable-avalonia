@@ -237,7 +237,7 @@ Tip: panel choice affects visual arrangement only; drag/drop behavior still depe
 | `TransferCommand` | `ICommand?` | `null` | Legacy cross-collection (auto-accept, deprecated) |
 | `Mode` | `SortableMode` | `Sort` | In-collection behavior: `Sort` or `Swap` |
 | `CrossCollectionTransferMode` | `SortableTransferMode` | `Move` | Default transfer mode: `Move`, `Copy`, or `Swap` |
-| `AnimationDuration` | `int` | `250` | Animation duration in milliseconds |
+| `AnimationDuration` | `TimeSpan` | `0:0:0.250` | Animation duration (as TimeSpan, e.g. `0:0:0.500` for 500ms) |
 
 ### Item Attached Properties
 
@@ -623,13 +623,13 @@ void Drop(SortableDropEventArgs e)
 
 ```xml
 <ItemsControl sortable:Sortable.Sortable="True"
-              sortable:Sortable.AnimationDuration="500"
+              sortable:Sortable.AnimationDuration="0:0:0.500"
               ItemsSource="{Binding Items}">
     <!-- Slower 500ms animations -->
 </ItemsControl>
 
 <ItemsControl sortable:Sortable.Sortable="True"
-              sortable:Sortable.AnimationDuration="100"
+              sortable:Sortable.AnimationDuration="0:0:0.100"
               ItemsSource="{Binding Items}">
     <!-- Faster 100ms animations -->
 </ItemsControl>
@@ -694,10 +694,10 @@ Restrict drag start to specific controls:
 
 ## Animation Control
 
-**Set duration (milliseconds):**
+**Set duration (TimeSpan):**
 
 ```xml
-sortable:Sortable.AnimationDuration="500"    <!-- Default: 250 -->
+sortable:Sortable.AnimationDuration="0:0:0.500"    <!-- Default: 0:0:0.250 -->
 ```
 
 **Applies to:**
