@@ -24,10 +24,6 @@ public class SortableReleaseEventArgs
     /// </summary>
     public int OldIndex { get; set; }
 
-    /// <summary>
-    /// Optional: The ItemsControl from which the item originated.
-    /// </summary>
-    public ItemsControl? SourceItemsControl { get; set; }
 }
 
 

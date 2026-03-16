@@ -1981,7 +1981,6 @@ public partial class Sortable
             Item = _draggedData,
             OldIndex = _originalIndex,
             SourceCollection = _sourceCollection,
-            SourceItemsControl = _currentItemsControl
         };
 
         if (releaseCmd?.CanExecute(eventArgs) == true)
