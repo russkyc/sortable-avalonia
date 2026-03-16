@@ -233,6 +233,7 @@ Tip: panel choice affects visual arrangement only; drag/drop behavior still depe
 | `Group` | `string?` | `null` | Group name (only same-group collections interact) |
 | `UpdateCommand` | `ICommand?` | `null` | Fires on same-collection reorder |
 | `DropCommand` | `ICommand?` | `null` | Fires on cross-collection drop (reversible) |
+| `ReleaseCommand` | `ICommand?` | `null` | Fires when item is released outside any valid drop target |
 | `TransferCommand` | `ICommand?` | `null` | Legacy cross-collection (auto-accept, deprecated) |
 | `Mode` | `SortableMode` | `Sort` | In-collection behavior: `Sort` or `Swap` |
 | `CrossCollectionTransferMode` | `SortableTransferMode` | `Move` | Default transfer mode: `Move`, `Copy`, or `Swap` |
@@ -271,6 +272,28 @@ void Update(SortableUpdateEventArgs e)
     {
         Debug.WriteLine($"{e.Item}: {e.OldIndex} → {e.NewIndex}");
     }
+}
+```
+
+### SortableReleaseEventArgs
+
+```csharp
+public class SortableReleaseEventArgs
+{
+    public object? Item { get; set; }              // Item released
+    public int OldIndex { get; set; }              // Original index
+    public IList? SourceCollection { get; set; }   // Collection item was dragged from
+}
+```
+
+**Usage:**
+
+```csharp
+[RelayCommand]
+void Release(SortableReleaseEventArgs e)
+{
+    Debug.WriteLine($"Item '{e.Item}' released at index {e.OldIndex} from collection {e.SourceCollection}");
+    // Custom logic for when an item is released outside any valid drop target
 }
 ```
 
@@ -759,6 +782,7 @@ dotnet run --project .\Sortable.Avalonia.Demo\Sortable.Avalonia.Demo.csproj
  |---|---|---|---|
 | `UpdateCommand` | Same-collection reorder | `SortableUpdateEventArgs` | ViewModel handles reorder rules and mutation |
 | `DropCommand` | Cross-collection drop | `SortableDropEventArgs` | ViewModel accepts/rejects and selects transfer mode |
+| `ReleaseCommand` | Release outside drop target | `SortableReleaseEventArgs` | ViewModel handles item release outside valid drop zone |
 | `TransferCommand` | Cross-collection transfer | `SortableTransferEventArgs` | Legacy fallback (auto-accept), prefer `DropCommand` |
 
 ## Contributing
