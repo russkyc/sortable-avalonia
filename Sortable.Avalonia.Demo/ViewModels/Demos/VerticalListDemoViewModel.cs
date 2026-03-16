@@ -29,16 +29,26 @@ namespace Sortable.Avalonia.Demo.ViewModels.Demos;
 
 public partial class VerticalListDemoViewModel : DemoViewModelBase
 {
-    [ObservableProperty]
-    private ObservableCollection<SortableItem> _simpleList =
-    [
-        new SortableItem("Fix auth timeout regression")    { Tag = "P0", Note = "Backend · 2 PRs waiting" },
-        new SortableItem("Resolve billing edge case")      { Tag = "P0", Note = "Finance · Regression test" },
-        new SortableItem("Prioritize customer bug reports") { Tag = "P1", Note = "CS escalation · 5 affected" },
-        new SortableItem("Update analytics dashboard")     { Tag = "P1", Note = "Product · Design ready" },
-        new SortableItem("Migrate legacy endpoints")       { Tag = "P2", Note = "Platform · Phase 2 scope" },
-        new SortableItem("Audit third-party API tokens")   { Tag = "P2", Note = "Security · Compliance due" },
-    ];
+    [ObservableProperty] private ObservableCollection<SortableItem> _simpleList;
+
+    public VerticalListDemoViewModel()
+    {
+        LoadItems();
+    }
+
+    [RelayCommand]
+    private void LoadItems()
+    {
+        SimpleList =
+        [
+            new SortableItem("Fix auth timeout regression") { Tag = "P0", Note = "Backend · 2 PRs waiting" },
+            new SortableItem("Resolve billing edge case") { Tag = "P0", Note = "Finance · Regression test" },
+            new SortableItem("Prioritize customer bug reports") { Tag = "P1", Note = "CS escalation · 5 affected" },
+            new SortableItem("Update analytics dashboard") { Tag = "P1", Note = "Product · Design ready" },
+            new SortableItem("Migrate legacy endpoints") { Tag = "P2", Note = "Platform · Phase 2 scope" },
+            new SortableItem("Audit third-party API tokens") { Tag = "P2", Note = "Security · Compliance due" },
+        ];
+    }
 
     [RelayCommand]
     private void OnSortSimpleListProgrammatically()
@@ -53,5 +63,13 @@ public partial class VerticalListDemoViewModel : DemoViewModelBase
     {
         LogEvent("🔀", "Queue shuffled randomly");
         ShuffleCollection(SimpleList);
+    }
+
+    [RelayCommand]
+    private void OnItemReleased(SortableReleaseEventArgs e)
+    {
+        if (e.Item is not SortableItem item) return;
+        LogEvent("ℹ️", $"'{item.Name}' removed from queue");
+        SimpleList.Remove(item);
     }
 }

@@ -52,6 +52,9 @@ public partial class Sortable
 
     private static void HandleSortableChanged(ItemsControl itemsControl, AvaloniaPropertyChangedEventArgs e)
     {
+        // Ensure hit testing even if user forgets to set a background
+        itemsControl.Background ??= new SolidColorBrush(Colors.Transparent);
+
         if (ShouldTrackProgrammaticAnimations(itemsControl))
         {
             AttachProgrammaticAnimationTracking(itemsControl);
@@ -869,6 +872,8 @@ public partial class Sortable
     {
         if (!_isDragging || _draggedElement == null) return;
 
+        TrackHoveredItemsControl(e);
+        
         var container = _draggedElement.FindAncestorOfType<ContentPresenter>();
         var panel = container?.FindAncestorOfType<Panel>();
         if (panel == null || container == null) return;
@@ -950,6 +955,16 @@ public partial class Sortable
         {
             HideCrossCollectionPlaceholder();
         }
+    }
+
+    private static void TrackHoveredItemsControl(PointerEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(_draggedElement);
+
+        var position = e.GetPosition(topLevel);
+        var hoveredElements = topLevel?.GetVisualsAt(position) ?? [];
+        _outsideDroppableAndSortableBounds = hoveredElements.All(
+            t => (t.GetType() != typeof(ItemsControl) || t != _originalItemsControl) && t.FindAncestorOfType<ItemsControl>() == null);
     }
 
     private static ItemsControl? FindHoveredItemsControl(PointerEventArgs e)
@@ -1904,12 +1919,15 @@ public partial class Sortable
             return;
         }
 
-        // Cross-collection transfers are now fully command-driven.
-        if (!ReferenceEquals(_sourceCollection, _targetCollection) && _targetCollection != null)
+        if (_outsideDroppableAndSortableBounds)
+        {
+            ExecuteReleaseCommand(null);
+        }
+        else if (!ReferenceEquals(_sourceCollection, _targetCollection) && _targetCollection != null && !_outsideDroppableAndSortableBounds)
         {
             ExecuteDropCommand(itemsControl);
         }
-        else if (_isSortableOnly && _currentIndex != _originalIndex)
+        else if (ReferenceEquals(_sourceCollection, _targetCollection) && _isSortableOnly && _currentIndex != _originalIndex && !_outsideDroppableAndSortableBounds)
         {
             // Same-collection reorder is now fully command-driven.
             ExecuteUpdateCommand(null);
@@ -1949,7 +1967,29 @@ public partial class Sortable
             dropCmd.Execute(dropEventArgs);
         }
     }
+    
+    private static void ExecuteReleaseCommand(ICommand? releaseCmd)
+    {
+        // If no command passed, try to get it from the current ItemsControl
+        if (releaseCmd == null && _originalItemsControl != null)
+        {
+            releaseCmd = GetReleaseCommand(_originalItemsControl);
+        }
 
+        var eventArgs = new SortableReleaseEventArgs()
+        {
+            Item = _draggedData,
+            OldIndex = _originalIndex,
+            SourceCollection = _sourceCollection,
+            SourceItemsControl = _currentItemsControl
+        };
+
+        if (releaseCmd?.CanExecute(eventArgs) == true)
+        {
+            releaseCmd.Execute(eventArgs);
+        }
+    }
+    
     private static void ExecuteUpdateCommand(ICommand? updateCmd)
     {
         // If no command passed, try to get it from the current ItemsControl

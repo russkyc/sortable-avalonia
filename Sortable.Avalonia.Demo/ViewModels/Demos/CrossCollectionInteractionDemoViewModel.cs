@@ -61,6 +61,12 @@ public partial class CrossCollectionInteractionDemoViewModel : DemoViewModelBase
     }
 
     [RelayCommand]
+    private void OnItemReleased(SortableReleaseEventArgs e)
+    {
+        LogEvent("ℹ️", $"'{e.Item}' released without dropping");
+    }
+
+    [RelayCommand]
     private void MoveTopIntakeToResolution()
     {
         if (Intake.Count == 0) return;

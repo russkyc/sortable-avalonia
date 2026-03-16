@@ -101,6 +101,23 @@ public partial class Sortable
     /// </summary>
     public static void SetTransferCommand(ItemsControl element, ICommand? value) =>
         element.SetValue(TransferCommandProperty, value);
+    
+    /// <summary>
+    /// Enables binding to a command that fires when an item is released outside any valid ItemsControl.
+    /// </summary>
+    public static readonly AttachedProperty<ICommand?> ReleaseCommandProperty =
+        AvaloniaProperty.RegisterAttached<Sortable, ItemsControl, ICommand?>("ReleaseCommand");
+
+    /// <summary>
+    /// Gets the release command for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static ICommand? GetReleaseCommand(ItemsControl element) => element.GetValue(ReleaseCommandProperty);
+
+    /// <summary>
+    /// Sets the release command for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static void SetReleaseCommand(ItemsControl element, ICommand? value) =>
+        element.SetValue(ReleaseCommandProperty, value);
 
     /// <summary>
     /// Enables an <see cref="ItemsControl"/> as a valid cross-collection drop target.
@@ -256,6 +273,7 @@ public partial class Sortable
 
     // STATE
     private static bool _isDragging;
+    private static bool _outsideDroppableAndSortableBounds;
     private static Control? _draggedElement;
     private static Point _dragStartPoint;
     private static Canvas? _overlayCanvas; // Canvas for drag preview
