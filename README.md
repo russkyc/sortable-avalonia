@@ -14,6 +14,11 @@
 
 MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-and-drop reordering, cross-collection transfers, reversible drop operations, drag handles, sort/swap modes, and animated programmatic updates.
 
+> [!NOTE]
+> #### Changes in Version 2.0.0
+> - **Breaking change:** `AnimationDuration` now uses `TimeSpan` instead of `int` (milliseconds). Update your XAML and code to use TimeSpan format (e.g., `0:0:0.500`).
+> - **New feature:** Release behavior with `ReleaseCommand` and `SortableReleaseEventArgs` for handling items released outside valid drop targets.
+
 ## Overview
 
 - [Demo](#demo)
