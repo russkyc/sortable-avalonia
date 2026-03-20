@@ -79,7 +79,7 @@ public partial class CrossCollectionProgrammaticDemoViewModel : DemoViewModelBas
         MoveTopItem(QueueB, QueueA);
     }
 
-    private static void MoveTopItem(ObservableCollection<SortableItem> source, ObservableCollection<SortableItem> target)
+    private new static void MoveTopItem(ObservableCollection<SortableItem> source, ObservableCollection<SortableItem> target)
     {
         if (source.Count == 0)
         {

@@ -35,6 +35,7 @@ MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-a
 - [Sortable Modes](#sortable-modes)
 - [Drag Handles](#drag-handles)
 - [Animation Control](#animation-control)
+- [Custom Drag Template](#custom-drag-template)
 - [Groups](#groups)
 - [18 Demo Scenarios](#18-demo-scenarios)
 - [Documentation](#documentation)
@@ -67,6 +68,7 @@ MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-a
 | **Transfer modes** | `Move`, `Copy`, `Swap` |
 | **Sortable modes** | `Sort` (shift), `Swap` (exchange) |
 | **Drag handles** | Restrict drag start to marked controls |
+| **Custom drag template** | Fully customize drag preview with `DraggingTemplate` |
 | **Animation** | Smooth transitions for interactive + programmatic changes |
 | **Groups** | Isolate interactions by group name |
 | **Mouse + Touch** | Unified pointer input on all platforms |
@@ -639,6 +641,41 @@ void Drop(SortableDropEventArgs e)
     <!-- Faster 100ms animations -->
 </ItemsControl>
 ```
+
+### Pattern 11: Custom drag template
+
+You can fully customize the drag preview for any ItemsControl using the `DraggingTemplate` attached property. This lets you define a `DataTemplate` for the drag visual, supporting rich layouts, icons, and dynamic content.
+
+```xml
+<UserControl.Resources>
+    <DataTemplate x:Key="CustomDragTemplate" x:DataType="models:SortableItem">
+        <Border Padding="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" BorderThickness="2" CornerRadius="10" Effect="{DynamicResource ShadowEffect}" Opacity="0.98">
+            <Grid ColumnDefinitions="32,*,Auto" ColumnSpacing="12">
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="28" Text="{Binding Tag}" />
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock FontSize="18" FontWeight="Bold" Text="{Binding Name}" />
+                    <TextBlock FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Note}" />
+                </StackPanel>
+                <Border Grid.Column="2" Padding="6,2" VerticalAlignment="Center" Background="{DynamicResource AccentFillColorDefaultBrush}" CornerRadius="6">
+                    <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="White" Text="{Binding Tag}" />
+                </Border>
+            </Grid>
+        </Border>
+    </DataTemplate>
+</UserControl.Resources>
+<ItemsControl
+    sortable:Sortable.DraggingTemplate="{StaticResource CustomDragTemplate}"
+    sortable:Sortable.Sortable="True"
+    ItemsSource="{Binding Intake}">
+    <!-- ...item template... -->
+</ItemsControl>
+```
+
+**Result:** Custom drag preview for each item, supporting rich layouts and dynamic content.
+
+**Property Reference:** `DraggingTemplate` (attached property)
+
+**Demo:** See "Custom Drag Template" scenario in the demo app.
 
 ## Transfer Modes
 

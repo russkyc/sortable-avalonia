@@ -29,7 +29,7 @@ namespace Sortable.Avalonia.Demo.ViewModels.Demos;
 
 public partial class VerticalListDemoViewModel : DemoViewModelBase
 {
-    [ObservableProperty] private ObservableCollection<SortableItem> _simpleList;
+    [ObservableProperty] private ObservableCollection<SortableItem> _simpleList = [];
 
     public VerticalListDemoViewModel()
     {

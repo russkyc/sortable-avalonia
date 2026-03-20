@@ -1,0 +1,302 @@
+﻿<UserControl
+    x:Class="Sortable.Avalonia.Demo.Views.Demos.DraggingTemplateDemoView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:logmodels="using:Sortable.Avalonia.Demo.Models"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Sortable.Avalonia.Demo.Models"
+    xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
+    x:DataType="vm:DraggingTemplateDemoViewModel"
+    mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:DraggingTemplateDemoViewModel />
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <!--  Custom drag template  -->
+        <DataTemplate x:Key="CustomDragTemplate" x:DataType="models:SortableItem">
+            <Border
+                Padding="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                BorderThickness="2"
+                CornerRadius="10"
+                Effect="{DynamicResource ShadowEffect}"
+                Opacity="0.98">
+                <Grid ColumnDefinitions="32,*,Auto" ColumnSpacing="12">
+                    <!--  Accent icon/emoji  -->
+                    <TextBlock
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="28"
+                        Text="{Binding Tag}" />
+                    <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="Bold"
+                            Text="{Binding Name}" />
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding Note}" />
+                    </StackPanel>
+                    <!--  Priority badge  -->
+                    <Border
+                        Grid.Column="2"
+                        Padding="6,2"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        CornerRadius="6">
+                        <TextBlock
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="{Binding Tag}" />
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer>
+        <StackPanel Margin="24" Spacing="16">
+            <TextBlock
+                FontSize="20"
+                FontWeight="SemiBold"
+                Text="Custom Dragging Template Demo" />
+            <TextBlock
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="Drag items between collections to see a custom drag visual. Use the buttons for animated programmatic transfers."
+                TextWrapping="Wrap" />
+            <ui:InfoBar
+                Title="Tip"
+                IsClosable="False"
+                IsOpen="True"
+                Message="Drag an item to see the custom template. The drag preview is fully customizable."
+                Severity="Informational" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Command="{Binding MoveTopIntakeToResolutionCommand}" Content="Resolve Top Intake" />
+                <Button Command="{Binding MoveTopResolutionToIntakeCommand}" Content="Re-open Top Resolution" />
+                <Button Command="{Binding MoveRandomDirectionCommand}" Content="Random Transfer" />
+            </StackPanel>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                <Border
+                    Grid.Column="0"
+                    Padding="10"
+                    Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                    CornerRadius="8">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ui:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                Symbol="Mail" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Text="Incident Intake" />
+                        </StackPanel>
+                        <ItemsControl
+                            sortable:Sortable.DraggingTemplate="{StaticResource CustomDragTemplate}"
+                            sortable:Sortable.DropCommand="{Binding ItemDroppedCommand}"
+                            sortable:Sortable.Droppable="True"
+                            sortable:Sortable.Group="drag-template-demo"
+                            sortable:Sortable.ReleaseCommand="{Binding ItemReleasedCommand}"
+                            sortable:Sortable.Sortable="True"
+                            sortable:Sortable.UpdateCommand="{Binding ItemUpdatedCommand}"
+                            ItemsSource="{Binding Intake}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="6" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:SortableItem">
+                                    <Border
+                                        sortable:Sortable.IsDroppable="True"
+                                        sortable:Sortable.IsSortable="True"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Cursor="Hand">
+                                        <Grid ColumnDefinitions="4,*">
+                                            <Border
+                                                Grid.Column="0"
+                                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="5,0,0,5" />
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                Margin="10,9"
+                                                Spacing="4">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding Name}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="16"
+                                                        Text="{Binding Tag}" />
+                                                </Grid>
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    Text="{Binding Note}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+                <Border
+                    Grid.Column="1"
+                    Padding="10"
+                    Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                    CornerRadius="8">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ui:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                Symbol="Checkmark" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Text="Resolved" />
+                        </StackPanel>
+                        <ItemsControl
+                            sortable:Sortable.DraggingTemplate="{StaticResource CustomDragTemplate}"
+                            sortable:Sortable.DropCommand="{Binding ItemDroppedCommand}"
+                            sortable:Sortable.Droppable="True"
+                            sortable:Sortable.Group="drag-template-demo"
+                            sortable:Sortable.ReleaseCommand="{Binding ItemReleasedCommand}"
+                            sortable:Sortable.Sortable="True"
+                            sortable:Sortable.UpdateCommand="{Binding ItemUpdatedCommand}"
+                            ItemsSource="{Binding Resolution}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="6" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:SortableItem">
+                                    <Border
+                                        sortable:Sortable.IsDroppable="True"
+                                        sortable:Sortable.IsSortable="True"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Cursor="Hand">
+                                        <Grid ColumnDefinitions="4,*">
+                                            <Border
+                                                Grid.Column="0"
+                                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="5,0,0,5" />
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                Margin="10,9"
+                                                Spacing="4">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding Name}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="16"
+                                                        Text="{Binding Tag}" />
+                                                </Grid>
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    Text="{Binding Note}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <!--  Event Log Panel  -->
+            <Border
+                Padding="12"
+                Background="{DynamicResource LayerFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel
+                            Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="6">
+                            <ui:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Symbol="Clock" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Text="Event Log" />
+                        </StackPanel>
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding ClearEventLogCommand}"
+                            Content="Clear" />
+                    </Grid>
+                    <Border
+                        Height="1"
+                        Background="{DynamicResource CardStrokeColorDefaultBrush}"
+                        Opacity="0.5" />
+                    <ScrollViewer MaxHeight="130" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding EventLog}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="logmodels:EventLogEntry">
+                                    <Grid
+                                        Margin="0,2"
+                                        ColumnDefinitions="55,20,*"
+                                        ColumnSpacing="6">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding Time}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="13"
+                                            Text="{Binding Emoji}" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Text="{Binding Message}"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+

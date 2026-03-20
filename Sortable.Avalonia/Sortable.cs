@@ -28,6 +28,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
+using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Media.Imaging;
 
 namespace Sortable.Avalonia;
@@ -262,6 +263,22 @@ public partial class Sortable
     {
         element.SetValue(AnimationDurationProperty, value >= MinimumAnimationDuration ? value : DefaultAnimationDuration);
     }
+
+    /// <summary>
+    /// Allows specifying a custom DataTemplate for the drag visual.
+    /// </summary>
+    public static readonly AttachedProperty<DataTemplate?> DraggingTemplateProperty =
+        AvaloniaProperty.RegisterAttached<Sortable, ItemsControl, DataTemplate?>("DraggingTemplate");
+
+    /// <summary>
+    /// Gets the custom dragging DataTemplate for the specified ItemsControl.
+    /// </summary>
+    public static DataTemplate? GetDraggingTemplate(ItemsControl element) => element.GetValue(DraggingTemplateProperty);
+
+    /// <summary>
+    /// Sets the custom dragging DataTemplate for the specified ItemsControl.
+    /// </summary>
+    public static void SetDraggingTemplate(ItemsControl element, DataTemplate? value) => element.SetValue(DraggingTemplateProperty, value);
 
     private const double PlaceholderOpacity = 0.5;
     private static readonly TimeSpan DefaultAnimationDuration = TimeSpan.FromMilliseconds(250);

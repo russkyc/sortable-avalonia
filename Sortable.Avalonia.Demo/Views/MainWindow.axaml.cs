@@ -68,6 +68,7 @@ public partial class MainWindow : Window
                 "GridLayout"                 => new GridLayoutDemoView { DataContext = vm.GridLayoutDemo },
                 "Kanban"                     => new KanbanBoardDemoView { DataContext = vm.KanbanBoardDemo },
                 "DragHandle"                 => new DragHandleDemoView { DataContext = vm.DragHandleDemo },
+                "DraggingTemplate"           => new DraggingTemplateDemoView { DataContext = new ViewModels.Demos.DraggingTemplateDemoViewModel() },
                 "MultipleGroups"             => new MultipleGroupsDemoView { DataContext = vm.MultipleGroupsDemo },
                 "DisabledItems"              => new DisabledItemsDemoView { DataContext = vm.DisabledItemsDemo },
                 "SortableOnly"               => new SortableOnlyDemoView { DataContext = vm.SortableOnlyDemo },

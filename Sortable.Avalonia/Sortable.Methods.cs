@@ -794,18 +794,42 @@ public partial class Sortable
 
     private static void CreateDragOverlay(Control previewVisual, TopLevel topLevel, Point pointerPosition)
     {
-        var previewBrush = CreateDragPreviewBrush(previewVisual, topLevel);
-
-        _dragProxy = new Border
+        // Check for custom dragging template
+        var draggingTemplate = _currentItemsControl != null ? Sortable.GetDraggingTemplate(_currentItemsControl) : null;
+        if (draggingTemplate != null && _draggedData != null)
         {
-            Width = previewVisual.Bounds.Width,
-            Height = previewVisual.Bounds.Height,
-            Background = previewBrush,
-            Opacity = 1.0,
-            IsHitTestVisible = false
-        };
-
-        RenderOptions.SetBitmapInterpolationMode(_dragProxy, BitmapInterpolationMode.HighQuality);
+            var presenter = new ContentPresenter
+            {
+                Content = _draggedData,
+                ContentTemplate = draggingTemplate,
+                Width = previewVisual.Bounds.Width,
+                Height = previewVisual.Bounds.Height,
+                Opacity = 1.0,
+                IsHitTestVisible = false
+            };
+            _dragProxy = new Border
+            {
+                Width = presenter.Width,
+                Height = presenter.Height,
+                Child = presenter,
+                Background = null,
+                Opacity = 1.0,
+                IsHitTestVisible = false
+            };
+        }
+        else
+        {
+            var previewBrush = CreateDragPreviewBrush(previewVisual, topLevel);
+            _dragProxy = new Border
+            {
+                Width = previewVisual.Bounds.Width,
+                Height = previewVisual.Bounds.Height,
+                Background = previewBrush,
+                Opacity = 1.0,
+                IsHitTestVisible = false
+            };
+            RenderOptions.SetBitmapInterpolationMode(_dragProxy, BitmapInterpolationMode.HighQuality);
+        }
 
         _overlayCanvas = new Canvas
         {

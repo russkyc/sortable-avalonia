@@ -104,4 +104,12 @@ public abstract partial class DemoViewModelBase : ViewModelBase
             if (i != j) items.Move(i, j);
         }
     }
+
+    protected static void MoveTopItem(ObservableCollection<SortableItem> source, ObservableCollection<SortableItem> target)
+    {
+        if (source.Count == 0) return;
+        var item = source[0];
+        source.RemoveAt(0);
+        target.Add(item);
+    }
 }

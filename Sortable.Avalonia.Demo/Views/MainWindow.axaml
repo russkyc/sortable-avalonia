@@ -7,13 +7,13 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels"
     Title="Sortable.Avalonia Demo"
+    MinWidth="800"
+    MinHeight="600"
     d:DesignHeight="800"
     d:DesignWidth="1280"
     x:DataType="vm:MainWindowViewModel"
     Icon="/Assets/avalonia-logo.ico"
-    mc:Ignorable="d"
-    MinWidth="800"
-    MinHeight="600">
+    mc:Ignorable="d">
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
@@ -93,6 +93,12 @@
             <ui:NavigationViewItem Content="Droppable Only" Tag="DroppableOnly">
                 <ui:NavigationViewItem.IconSource>
                     <ui:SymbolIconSource Symbol="Import" />
+                </ui:NavigationViewItem.IconSource>
+            </ui:NavigationViewItem>
+
+            <ui:NavigationViewItem Content="Custom Drag Template" Tag="DraggingTemplate">
+                <ui:NavigationViewItem.IconSource>
+                    <ui:SymbolIconSource Symbol="List" />
                 </ui:NavigationViewItem.IconSource>
             </ui:NavigationViewItem>
 
