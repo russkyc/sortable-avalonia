@@ -12,7 +12,7 @@
         <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Sortable.Avalonia</PackageId>
-        <Version>2.1.0</Version>
+        <Version>2.1.1</Version>
         <PackageReleaseNotes>Feature: Add support for custom dragging template</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
