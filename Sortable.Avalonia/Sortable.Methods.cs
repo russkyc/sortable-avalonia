@@ -54,71 +54,47 @@ public partial class Sortable
     {
         // Ensure hit testing even if user forgets to set a background
         itemsControl.Background ??= new SolidColorBrush(Colors.Transparent);
-
-        if (ShouldTrackProgrammaticAnimations(itemsControl))
-        {
-            AttachProgrammaticAnimationTracking(itemsControl);
-            return;
-        }
-
-        DetachProgrammaticAnimationTracking(itemsControl);
+        UpdateProgrammaticAnimationTracking(itemsControl);
     }
 
     private static void HandleDroppableChanged(ItemsControl itemsControl, AvaloniaPropertyChangedEventArgs e)
     {
+        UpdateProgrammaticAnimationTracking(itemsControl);
+    }
+
+    private static void UpdateProgrammaticAnimationTracking(ItemsControl itemsControl)
+    {
         if (ShouldTrackProgrammaticAnimations(itemsControl))
         {
-            AttachProgrammaticAnimationTracking(itemsControl);
-            return;
+            SortableEventHandlerHelper.AttachProgrammaticAnimationTracking(
+                itemsControl,
+                TrackedItemsControls,
+                RefreshCollectionSubscription,
+                QueueStableBoundsWarmup,
+                OnTrackedItemsControlPropertyChanged,
+                OnTrackedItemsControlAttached,
+                OnTrackedItemsControlDetached,
+                OnTrackedItemsControlLayoutUpdated);
         }
-
-        DetachProgrammaticAnimationTracking(itemsControl);
+        else
+        {
+            SortableEventHandlerHelper.DetachProgrammaticAnimationTracking(
+                itemsControl,
+                TrackedItemsControls,
+                ObservedCollections,
+                CollectionHandlers,
+                LastStableBounds,
+                PendingProgrammaticRemovals,
+                OnTrackedItemsControlPropertyChanged,
+                OnTrackedItemsControlAttached,
+                OnTrackedItemsControlDetached,
+                OnTrackedItemsControlLayoutUpdated);
+        }
     }
 
     private static bool ShouldTrackProgrammaticAnimations(ItemsControl itemsControl) =>
         GetSortable(itemsControl) || GetDroppable(itemsControl);
 
-    private static void AttachProgrammaticAnimationTracking(ItemsControl itemsControl)
-    {
-        if (!TrackedItemsControls.Add(itemsControl))
-        {
-            RefreshCollectionSubscription(itemsControl);
-            QueueStableBoundsWarmup(itemsControl);
-            return;
-        }
-
-        itemsControl.PropertyChanged += OnTrackedItemsControlPropertyChanged;
-        itemsControl.AttachedToVisualTree += OnTrackedItemsControlAttached;
-        itemsControl.DetachedFromVisualTree += OnTrackedItemsControlDetached;
-        itemsControl.LayoutUpdated += OnTrackedItemsControlLayoutUpdated;
-
-        RefreshCollectionSubscription(itemsControl);
-        QueueStableBoundsWarmup(itemsControl);
-    }
-
-    private static void DetachProgrammaticAnimationTracking(ItemsControl itemsControl)
-    {
-        if (!TrackedItemsControls.Remove(itemsControl))
-        {
-            return;
-        }
-
-        itemsControl.PropertyChanged -= OnTrackedItemsControlPropertyChanged;
-        itemsControl.AttachedToVisualTree -= OnTrackedItemsControlAttached;
-        itemsControl.DetachedFromVisualTree -= OnTrackedItemsControlDetached;
-        itemsControl.LayoutUpdated -= OnTrackedItemsControlLayoutUpdated;
-
-        if (ObservedCollections.TryGetValue(itemsControl, out var observedCollection) &&
-            CollectionHandlers.TryGetValue(itemsControl, out var handler))
-        {
-            observedCollection.CollectionChanged -= handler;
-        }
-
-        ObservedCollections.Remove(itemsControl);
-        CollectionHandlers.Remove(itemsControl);
-        LastStableBounds.Remove(itemsControl);
-        PendingProgrammaticRemovals.RemoveAll(snapshot => ReferenceEquals(snapshot.SourceItemsControl, itemsControl));
-    }
 
     private static void OnTrackedItemsControlAttached(object? sender, VisualTreeAttachmentEventArgs e)
     {
@@ -145,7 +121,7 @@ public partial class Sortable
 
         if (!ShouldTrackProgrammaticAnimations(itemsControl))
         {
-            DetachProgrammaticAnimationTracking(itemsControl);
+            // No longer tracking, so just return (helper will handle detachment)
             return;
         }
 
@@ -600,25 +576,22 @@ public partial class Sortable
 
     private static void HandleIsSortableChanged(Control control, AvaloniaPropertyChangedEventArgs e)
     {
-        // Attach handlers if either IsSortable or IsDroppable is true
-        if (GetIsSortable(control) || GetIsDroppable(control))
-        {
-            AttachEventHandlers(control);
-        }
-        else if (!GetIsDroppable(control))
-        {
-            DetachEventHandlers(control);
-        }
+        UpdateEventHandlersForSortableOrDroppable(control);
     }
 
     private static void HandleIsDroppableChanged(Control control, AvaloniaPropertyChangedEventArgs e)
+    {
+        UpdateEventHandlersForSortableOrDroppable(control);
+    }
+
+    private static void UpdateEventHandlersForSortableOrDroppable(Control control)
     {
         // Attach handlers if either IsSortable or IsDroppable is true
         if (GetIsSortable(control) || GetIsDroppable(control))
         {
             AttachEventHandlers(control);
         }
-        else if (!GetIsSortable(control))
+        else
         {
             DetachEventHandlers(control);
         }
@@ -692,7 +665,7 @@ public partial class Sortable
 
     private static bool CanStartDragFromPointerOrigin(Control dragRoot, PointerPressedEventArgs e)
     {
-        if (e.Source is not Visual sourceVisual)
+        if (e.Source is not Control sourceControl)
         {
             return true;
         }
@@ -700,11 +673,11 @@ public partial class Sortable
         // If a handle exists in this item, drag can start only from that handle subtree.
         if (HasDragHandle(dragRoot))
         {
-            return IsPointerFromDragHandle(sourceVisual, dragRoot);
+            return sourceControl.IsPointerFromDragHandle(dragRoot, GetIsDragHandle);
         }
 
         // Otherwise, keep embedded controls clickable and focusable.
-        return !IsInteractiveOrigin(sourceVisual, dragRoot);
+        return !sourceControl.IsInteractiveOrigin(dragRoot);
     }
 
     private static bool HasDragHandle(Control dragRoot)
@@ -719,47 +692,7 @@ public partial class Sortable
             .Any(GetIsDragHandle);
     }
 
-    private static bool IsPointerFromDragHandle(Visual sourceVisual, Control dragRoot)
-    {
-        var current = sourceVisual;
-        while (current != null)
-        {
-            if (current is Control control && GetIsDragHandle(control))
-            {
-                return true;
-            }
-
-            if (ReferenceEquals(current, dragRoot))
-            {
-                break;
-            }
-
-            current = current.GetVisualParent();
-        }
-
-        return false;
-    }
-
-    private static bool IsInteractiveOrigin(Visual sourceVisual, Control dragRoot)
-    {
-        var current = sourceVisual;
-        while (current != null && !ReferenceEquals(current, dragRoot))
-        {
-            if (current is Button ||
-                current is ToggleButton ||
-                current is TextBox ||
-                current is SelectingItemsControl ||
-                current is Slider ||
-                current is ScrollBar)
-            {
-                return true;
-            }
-
-            current = current.GetVisualParent();
-        }
-
-        return false;
-    }
+    // ...existing code...
 
     private static void CacheLayoutSlots(Panel panel, ContentPresenter container, ItemsControl itemsControl)
     {
@@ -897,7 +830,7 @@ public partial class Sortable
         if (!_isDragging || _draggedElement == null) return;
 
         TrackHoveredItemsControl(e);
-        
+
         var container = _draggedElement.FindAncestorOfType<ContentPresenter>();
         var panel = container?.FindAncestorOfType<Panel>();
         if (panel == null || container == null) return;
@@ -929,6 +862,22 @@ public partial class Sortable
 
         _currentPanel = activePanel;
 
+
+        // --- FIX: Always refresh LogicalChildren and SlotBounds before preview update ---
+        LogicalChildren.Clear();
+        SlotBounds.Clear();
+        foreach (var child in activePanel.Children)
+        {
+            if (child is ContentPresenter cp)
+            {
+                LogicalChildren.Add(cp);
+                SlotBounds.Add(cp.Bounds);
+            }
+        }
+
+        // --- FIX: Recalculate _originalIndex to match the current index of the grabbed container ---
+        _originalIndex = LogicalChildren.IndexOf(container);
+
         // Handle empty collections or dropping at the end
         if (LogicalChildren.Count == 0)
         {
@@ -943,8 +892,8 @@ public partial class Sortable
         if (isCrossCollection)
         {
             // For cross-collection hovers, use pointer position in the active target panel.
-            var pointerInActivePanel = e.GetPosition(activePanel);
-            hoverIndex = FindClosestSlot(pointerInActivePanel, includeTerminalSlot: true);
+
+
         }
         else
         {
@@ -961,23 +910,24 @@ public partial class Sortable
             var draggedVirtualBounds = container.Bounds.Translate(currentPosition - _dragStartPoint);
             var draggedCenter = GetBoundsCenter(draggedVirtualBounds);
             hoverIndex = FindClosestSlot(draggedCenter, includeTerminalSlot: false);
-        }
 
-        hoverIndex = Math.Max(0, Math.Min(hoverIndex, LogicalChildren.Count));
+            hoverIndex = Math.Max(0, Math.Min(hoverIndex, LogicalChildren.Count));
 
-        if (hoverIndex != _currentIndex)
-        {
-            _currentIndex = hoverIndex;
-            UpdatePreviewLayout();
-        }
+            if (hoverIndex != _currentIndex)
+            {
+                _currentIndex = hoverIndex;
+                UpdatePreviewLayout();
+            }
 
-        if (isCrossCollection)
-        {
-            UpdateCrossCollectionPlaceholder();
-        }
-        else
-        {
-            HideCrossCollectionPlaceholder();
+            if (isCrossCollection)
+            {
+                UpdateCrossCollectionPlaceholder();
+            }
+            else
+            {
+                HideCrossCollectionPlaceholder();
+            }
+            // else: container is null, skip preview transform and index update
         }
     }
 
@@ -1981,6 +1931,13 @@ public partial class Sortable
             return;
         }
 
+        // Fix: For cross-collection, set _originalSourceIndex to the index of the dragged item in the source collection
+        if (!ReferenceEquals(_sourceCollection, _targetCollection) && _sourceCollection != null && _draggedData != null)
+        {
+            int idx = _sourceCollection.IndexOf(_draggedData);
+            _originalSourceIndex = idx;
+        }
+
         var dropEventArgs = new SortableDropEventArgs
         {
             Item = _draggedData,
@@ -1990,6 +1947,9 @@ public partial class Sortable
             NewIndex = _currentIndex,
             TransferMode = GetCrossCollectionTransferMode(itemsControl)
         };
+
+        // Debug logging for cross-collection drop
+        Console.WriteLine($"[DROP DEBUG] SourceCollection: {_sourceCollection?.GetType().Name}, TargetCollection: {_targetCollection?.GetType().Name}, OldIndex: {_originalSourceIndex}, NewIndex: {_currentIndex}, Item: {_draggedData}, TransferMode: {dropEventArgs.TransferMode}");
 
         if (dropCmd.CanExecute(dropEventArgs))
         {

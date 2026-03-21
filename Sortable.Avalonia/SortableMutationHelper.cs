@@ -80,14 +80,18 @@ public static class SortableMutationHelper
     {
         if (!e.IsAccepted || e.SourceCollection == null || e.TargetCollection == null)
         {
+            Console.WriteLine($"[MUTATION DEBUG] Drop rejected or missing collections. IsAccepted: {e.IsAccepted}, Source: {e.SourceCollection}, Target: {e.TargetCollection}");
             return false;
         }
 
         var itemToInsert = e.GetItemToInsert();
         if (itemToInsert == null)
         {
+            Console.WriteLine("[MUTATION DEBUG] Item to insert is null.");
             return false;
         }
+
+        Console.WriteLine($"[MUTATION DEBUG] TransferMode: {e.TransferMode}, Source.Count: {e.SourceCollection.Count}, Target.Count: {e.TargetCollection.Count}, OldIndex: {e.OldIndex}, NewIndex: {e.NewIndex}, Item: {itemToInsert}");
 
         if (e.TransferMode == SortableTransferMode.Swap)
         {
