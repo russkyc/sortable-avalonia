@@ -7,7 +7,6 @@
     xmlns:models="using:Sortable.Avalonia.Demo.Models"
     xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     x:DataType="vm:CrossCollectionProgrammaticDemoViewModel"
     mc:Ignorable="d">
     <Design.DataContext>
@@ -24,12 +23,17 @@
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                 Text="Use the buttons to move items across collections in code; the engine now animates source-to-target travel and sibling reflow."
                 TextWrapping="Wrap" />
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Message="Programmatic mutations animate smoothly when items move between collections."
-                Severity="Informational"
-                Title="Tip" />
+                        <Border
+                Padding="12,8"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                BorderThickness="3,0,0,0"
+                Background="{DynamicResource InfoBarBackgroundBrush}"
+                CornerRadius="0,4,4,0">
+                <StackPanel Spacing="2">
+                    <TextBlock FontWeight="SemiBold" Text="Tip" />
+                    <TextBlock Text="Programmatic mutations animate smoothly when items move between collections." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
 
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Button Theme="{StaticResource AccentButtonTheme}" Command="{Binding MoveTopAToBCommand}" Content="Move Top A to B" />

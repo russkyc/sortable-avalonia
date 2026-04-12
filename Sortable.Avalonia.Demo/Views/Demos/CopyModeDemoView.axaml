@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Sortable.Avalonia.Demo.Models"
     xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
     xmlns:logmodels="using:Sortable.Avalonia.Demo.Models"
     x:DataType="vm:CopyModeDemoViewModel"
@@ -21,16 +20,21 @@
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                 Text="Drag templates from the catalog into your campaign draft. The original stays in the library — a copy is added to the draft."
                 TextWrapping="Wrap" />
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Message="Copy Mode: the source item is never removed. Only a copy lands in the target collection."
-                Severity="Success"
-                Title="Copy Mode" />
+                        <Border
+                Padding="12,8"
+                BorderBrush="#107C10"
+                BorderThickness="3,0,0,0"
+                Background="{DynamicResource InfoBarSuccessBackgroundBrush}"
+                CornerRadius="0,4,4,0">
+                <StackPanel Spacing="2">
+                    <TextBlock FontWeight="SemiBold" Text="Copy Mode" />
+                    <TextBlock Text="Copy Mode: the source item is never removed. Only a copy lands in the target collection." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
                 <StackPanel Grid.Column="0" Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ui:SymbolIcon Symbol="Library" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="📚" FontSize="16" VerticalAlignment="Center" />
                         <TextBlock FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Text="Template Catalog" />
                     </StackPanel>
                     <Border
@@ -63,11 +67,7 @@
                                                 Height="32"
                                                 Background="{DynamicResource SubtleFillColorSecondaryBrush}"
                                                 CornerRadius="6">
-                                                <ui:SymbolIcon
-                                                    FontSize="16"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Symbol="Mail" />
+                                                <TextBlock Text="✉" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
                                                 <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding Name}" />
@@ -90,7 +90,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="1" Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ui:SymbolIcon Symbol="Edit" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="✏" FontSize="16" VerticalAlignment="Center" />
                         <TextBlock FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Text="Campaign Draft" />
                     </StackPanel>
                     <Border
@@ -123,11 +123,7 @@
                                                 Height="32"
                                                 Background="{DynamicResource SubtleFillColorSecondaryBrush}"
                                                 CornerRadius="6">
-                                                <ui:SymbolIcon
-                                                    FontSize="16"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Symbol="Document" />
+                                                <TextBlock Text="📄" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
                                                 <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding Name}" />
@@ -159,7 +155,7 @@
                 <StackPanel Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                            <ui:SymbolIcon FontSize="14" Symbol="Clock" VerticalAlignment="Center" />
+                            <TextBlock Text="⏱" FontSize="14" VerticalAlignment="Center" />
                             <TextBlock FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Text="Event Log" />
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding ClearEventLogCommand}" Content="Clear" />
