@@ -6,6 +6,7 @@
 
 <p align="center">
     <img src="https://img.shields.io/nuget/v/Sortable.Avalonia?color=1f72de" alt="Nuget">
+    <img src="https://img.shields.io/badge/-12.X-blueviolet?color=1f72de&label=Avalonia" alt="">
     <img src="https://img.shields.io/badge/-.NET%20Standard%202.1-blueviolet?color=1f72de&label=NET" alt="">
     <img src="https://img.shields.io/github/license/russkyc/sortable-avalonia">
     <img src="https://img.shields.io/github/issues/russkyc/sortable-avalonia">
@@ -15,6 +16,8 @@
 MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-and-drop reordering, cross-collection transfers, reversible drop operations, drag handles, sort/swap modes, and animated programmatic updates.
 
 > [!NOTE]
+> #### Changes in Version 2.2.0
+> - Package now targets NET 8.0 and NET 10.0 and now requires Avalonia 12.0+. Update your project references accordingly.
 > #### Changes in Version 2.0.0
 > - **Breaking change:** `AnimationDuration` now uses `TimeSpan` instead of `int` (milliseconds). Update your XAML and code to use TimeSpan format (e.g., `0:0:0.500`).
 > - **New feature:** Release behavior with `ReleaseCommand` and `SortableReleaseEventArgs` for handling items released outside valid drop targets.
