@@ -37,7 +37,7 @@ public class BoolToColorConverter : IValueConverter
         var sortable = value as bool? ?? true;
         return sortable
             ? GetBrush("CardBackgroundFillColorDefaultBrush", Brushes.White)
-            : GetBrush("ControlFillColorDisabledBrush", Brushes.LightGray);
+            : GetBrush("CardBackgroundFillColorDisabledBrush", Brushes.LightGray);
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
