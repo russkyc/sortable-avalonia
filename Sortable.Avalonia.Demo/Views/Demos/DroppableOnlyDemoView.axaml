@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Sortable.Avalonia.Demo.Models"
     xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
     xmlns:logmodels="using:Sortable.Avalonia.Demo.Models"
     x:DataType="vm:DroppableOnlyDemoViewModel"
@@ -21,16 +20,21 @@
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                 Text="Tickets can be handed off between tiers but order within a zone is fixed. Drop to escalate — no internal reordering."
                 TextWrapping="Wrap" />
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Message="Droppable=True without Sortable means: accepts incoming drops, but internal order is fixed."
-                Severity="Informational"
-                Title="Tip" />
+                        <Border
+                Padding="12,8"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                BorderThickness="3,0,0,0"
+                Background="{DynamicResource InfoBarBackgroundBrush}"
+                CornerRadius="0,4,4,0">
+                <StackPanel Spacing="2">
+                    <TextBlock FontWeight="SemiBold" Text="Tip" />
+                    <TextBlock Text="Droppable=True without Sortable means: accepts incoming drops, but internal order is fixed." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
                 <StackPanel Grid.Column="0" Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ui:SymbolIcon Symbol="Mail" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="✉" FontSize="16" VerticalAlignment="Center" />
                         <TextBlock FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Text="Tier 1 Intake" />
                     </StackPanel>
                     <Border
@@ -77,7 +81,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="1" Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ui:SymbolIcon Symbol="AlertUrgent" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="⚠" FontSize="16" VerticalAlignment="Center" />
                         <TextBlock FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Text="Tier 2 Escalations" />
                     </StackPanel>
                     <Border
@@ -133,7 +137,7 @@
                 <StackPanel Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                            <ui:SymbolIcon FontSize="14" Symbol="Clock" VerticalAlignment="Center" />
+                            <TextBlock Text="⏱" FontSize="14" VerticalAlignment="Center" />
                             <TextBlock FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Text="Event Log" />
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding ClearEventLogCommand}" Content="Clear" />

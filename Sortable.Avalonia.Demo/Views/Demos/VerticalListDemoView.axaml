@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Sortable.Avalonia.Demo.Models"
     xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
     xmlns:logmodels="using:Sortable.Avalonia.Demo.Models"
     x:DataType="vm:VerticalListDemoViewModel"
@@ -21,12 +20,17 @@
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                 Text="Drag cards to reprioritize work. Each card shows a priority badge, owner team, and current status."
                 TextWrapping="Wrap" />
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Message="Drag any card to reorder. Embedded TextBox, CheckBox and Button controls remain fully interactive."
-                Severity="Informational"
-                Title="Tip" />
+                        <Border
+                Padding="12,8"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                BorderThickness="3,0,0,0"
+                Background="{DynamicResource InfoBarBackgroundBrush}"
+                CornerRadius="0,4,4,0">
+                <StackPanel Spacing="2">
+                    <TextBlock FontWeight="SemiBold" Text="Tip" />
+                    <TextBlock Text="Drag any card to reorder. Embedded TextBox, CheckBox and Button controls remain fully interactive." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button Theme="{StaticResource AccentButtonTheme}" Command="{Binding SortSimpleListProgrammaticallyCommand}" Content="Escalate Last Item" />
                 <Button Command="{Binding RandomizeSimpleListCommand}" Content="Shuffle Queue" />
@@ -99,7 +103,7 @@
                 <StackPanel Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                            <ui:SymbolIcon FontSize="14" Symbol="Clock" VerticalAlignment="Center" />
+                            <TextBlock Text="⏱" FontSize="14" VerticalAlignment="Center" />
                             <TextBlock FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Text="Event Log" />
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding ClearEventLogCommand}" Content="Clear" />
