@@ -7,7 +7,6 @@
     xmlns:demo="clr-namespace:Sortable.Avalonia.Demo"
     xmlns:models="using:Sortable.Avalonia.Demo.Models"
     xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
     xmlns:logmodels="using:Sortable.Avalonia.Demo.Models"
     x:DataType="vm:DisabledItemsDemoViewModel"
@@ -23,12 +22,17 @@
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                 Text="Items marked FROZEN are locked during the change window. Draggable items show a grip handle and hand cursor; locked items show a no-entry cursor and faded content."
                 TextWrapping="Wrap" />
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Message="Items with IsSortable=False cannot be dragged or displaced. They also get a visual FROZEN badge, muted accent strip, and faded text to make the lock state immediately obvious."
-                Severity="Informational"
-                Title="Tip" />
+                        <Border
+                Padding="12,8"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                BorderThickness="3,0,0,0"
+                Background="{DynamicResource InfoBarBackgroundBrush}"
+                CornerRadius="0,4,4,0">
+                <StackPanel Spacing="2">
+                    <TextBlock FontWeight="SemiBold" Text="Tip" />
+                    <TextBlock Text="Items with IsSortable=False cannot be dragged or displaced. They also get a visual FROZEN badge, muted accent strip, and faded text to make the lock state immediately obvious." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
             <Border
                 MaxWidth="580"
                 Padding="12"
@@ -113,7 +117,7 @@
                 <StackPanel Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                            <ui:SymbolIcon FontSize="14" Symbol="Clock" VerticalAlignment="Center" />
+                            <TextBlock Text="⏱" FontSize="14" VerticalAlignment="Center" />
                             <TextBlock FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Text="Event Log" />
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding ClearEventLogCommand}" Content="Clear" />

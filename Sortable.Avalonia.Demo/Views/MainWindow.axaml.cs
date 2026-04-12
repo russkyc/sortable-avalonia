@@ -22,7 +22,6 @@
 
 using System.Collections.Generic;
 using Avalonia.Controls;
-using FluentAvalonia.UI.Controls;
 using Sortable.Avalonia.Demo.ViewModels;
 using Sortable.Avalonia.Demo.Views.Demos;
 
@@ -40,21 +39,20 @@ public partial class MainWindow : Window
 
     private void SelectFirstNavItem()
     {
-        // Walk MenuItems to find the first NavigationViewItem (skip headers)
-        foreach (var menuItem in NavView.MenuItems)
+        foreach (var item in NavList.Items)
         {
-            if (menuItem is NavigationViewItem navItem)
+            if (item is ListBoxItem { IsEnabled: true } navItem)
             {
-                NavView.SelectedItem = navItem;
+                NavList.SelectedItem = navItem;
                 return;
             }
         }
     }
 
-    private void NavView_OnSelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
+    private void NavList_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm) return;
-        if (e.SelectedItem is not NavigationViewItem item) return;
+        if (NavList.SelectedItem is not ListBoxItem item) return;
 
         var tag = item.Tag?.ToString();
         if (tag is null) return;

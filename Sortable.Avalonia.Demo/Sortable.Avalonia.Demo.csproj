@@ -22,7 +22,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-        <PackageReference Include="fluentavaloniaui" Version="2.5.0" />
+
     </ItemGroup>
 
     <ItemGroup>
