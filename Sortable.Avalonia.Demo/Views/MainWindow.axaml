@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels"
     Title="Sortable.Avalonia Demo"
     MinWidth="800"
@@ -18,150 +17,193 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <ui:NavigationView
-        x:Name="NavView"
-        IsBackButtonVisible="False"
-        IsPaneOpen="True"
-        IsSettingsVisible="False"
-        OpenPaneLength="230"
-        PaneDisplayMode="Left"
-        SelectionChanged="NavView_OnSelectionChanged">
+    <Grid ColumnDefinitions="230,*">
 
-        <ui:NavigationView.PaneHeader>
-            <StackPanel Margin="12,8,12,4" Spacing="0">
-                <TextBlock
-                    FontSize="16"
-                    FontWeight="SemiBold"
-                    Text="Sortable.Avalonia" />
-                <TextBlock
-                    FontSize="11"
-                    Opacity="0.6"
-                    Text="Feature Demos" />
-            </StackPanel>
-        </ui:NavigationView.PaneHeader>
+        <!--  Navigation Pane  -->
+        <Border
+            Grid.Column="0"
+            Background="{DynamicResource NavPaneBackgroundBrush}"
+            BorderBrush="{DynamicResource NavPaneBorderBrush}"
+            BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!--  Pane Header  -->
+                <StackPanel DockPanel.Dock="Top" Margin="12,12,12,4" Spacing="0">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Sortable.Avalonia" />
+                    <TextBlock
+                        FontSize="11"
+                        Opacity="0.6"
+                        Text="Feature Demos" />
+                </StackPanel>
 
-        <ui:NavigationView.MenuItems>
+                <!--  Navigation Items  -->
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                    <ListBox
+                        x:Name="NavList"
+                        Margin="4,4,4,4"
+                        SelectionChanged="NavList_OnSelectionChanged">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="10,6" />
+                                <Setter Property="CornerRadius" Value="4" />
+                            </Style>
+                            <Style Selector="ListBoxItem:disabled">
+                                <Setter Property="Opacity" Value="1" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                                <Setter Property="Padding" Value="4,10,4,2" />
+                                <Setter Property="Focusable" Value="False" />
+                            </Style>
+                        </ListBox.Styles>
 
-            <!--  Sorting  -->
-            <ui:NavigationViewItemHeader Content="Sorting" />
+                        <!--  Sorting  -->
+                        <ListBoxItem IsEnabled="False">
+                            <TextBlock
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource NavHeaderForegroundBrush}"
+                                Text="SORTING" />
+                        </ListBoxItem>
+                        <ListBoxItem Tag="VerticalList">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="≡" VerticalAlignment="Center" />
+                                <TextBlock Text="Task Queue" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="HorizontalStack">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⊞" VerticalAlignment="Center" />
+                                <TextBlock Text="Pipeline Stages" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="GridLayout">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⚙" VerticalAlignment="Center" />
+                                <TextBlock Text="Dashboard Grid" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
 
-            <ui:NavigationViewItem Content="Task Queue" Tag="VerticalList">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="List" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
+                        <!--  Control Features  -->
+                        <ListBoxItem IsEnabled="False">
+                            <TextBlock
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource NavHeaderForegroundBrush}"
+                                Text="CONTROL FEATURES" />
+                        </ListBoxItem>
+                        <ListBoxItem Tag="DragHandle">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⋮" VerticalAlignment="Center" />
+                                <TextBlock Text="Drag Handle" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="MultipleGroups">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="📁" VerticalAlignment="Center" />
+                                <TextBlock Text="Multiple Groups" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="DisabledItems">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⊟" VerticalAlignment="Center" />
+                                <TextBlock Text="Disabled Items" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="SortableOnly">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⇅" VerticalAlignment="Center" />
+                                <TextBlock Text="Sortable Only" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="DroppableOnly">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="↓" VerticalAlignment="Center" />
+                                <TextBlock Text="Droppable Only" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="DraggingTemplate">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="≡" VerticalAlignment="Center" />
+                                <TextBlock Text="Custom Drag Template" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
 
-            <ui:NavigationViewItem Content="Pipeline Stages" Tag="HorizontalStack">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="ViewAll" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
+                        <!--  Cross-Collection  -->
+                        <ListBoxItem IsEnabled="False">
+                            <TextBlock
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource NavHeaderForegroundBrush}"
+                                Text="CROSS-COLLECTION" />
+                        </ListBoxItem>
+                        <ListBoxItem Tag="CrossCollectionInteraction">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="↻" VerticalAlignment="Center" />
+                                <TextBlock Text="Cross-Collection Transfer" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="Kanban">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⊞" VerticalAlignment="Center" />
+                                <TextBlock Text="Kanban Board" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="ConditionalAcceptance">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⊕" VerticalAlignment="Center" />
+                                <TextBlock Text="Conditional Acceptance" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
 
-            <ui:NavigationViewItem Content="Dashboard Grid" Tag="GridLayout">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Manage" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
+                        <!--  Transfer &amp; Sort Modes  -->
+                        <ListBoxItem IsEnabled="False">
+                            <TextBlock
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource NavHeaderForegroundBrush}"
+                                Text="TRANSFER &amp; SORT MODES" />
+                        </ListBoxItem>
+                        <ListBoxItem Tag="SortMode">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="♫" VerticalAlignment="Center" />
+                                <TextBlock Text="Playlist (Sort Mode)" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="SwapMode">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="👤" VerticalAlignment="Center" />
+                                <TextBlock Text="On-Call Roster (Swap)" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="CopyMode">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⎘" VerticalAlignment="Center" />
+                                <TextBlock Text="Template Library (Copy)" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="CrossSwap">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⇄" VerticalAlignment="Center" />
+                                <TextBlock Text="Team Swap (Cross)" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="UniformGridSwap">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="⇌" VerticalAlignment="Center" />
+                                <TextBlock Text="Grid Swap" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
 
-            <!--  Control Features  -->
-            <ui:NavigationViewItemHeader Content="Control Features" />
-
-            <ui:NavigationViewItem Content="Drag Handle" Tag="DragHandle">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="MoreVertical" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Multiple Groups" Tag="MultipleGroups">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Folder" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Disabled Items" Tag="DisabledItems">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Filter" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Sortable Only" Tag="SortableOnly">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Sort" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Droppable Only" Tag="DroppableOnly">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Import" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Custom Drag Template" Tag="DraggingTemplate">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="List" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <!--  Cross-Collection  -->
-            <ui:NavigationViewItemHeader Content="Cross-Collection" />
-
-            <ui:NavigationViewItem Content="Cross-Collection Transfer" Tag="CrossCollectionInteraction">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Sync" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Kanban Board" Tag="Kanban">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="AllApps" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Conditional Acceptance" Tag="ConditionalAcceptance">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Find" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <!--  Modes  -->
-            <ui:NavigationViewItemHeader Content="Transfer &amp; Sort Modes" />
-
-            <ui:NavigationViewItem Content="Playlist (Sort Mode)" Tag="SortMode">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="MusicInfo" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="On-Call Roster (Swap)" Tag="SwapMode">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="People" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Template Library (Copy)" Tag="CopyMode">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Copy" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Team Swap (Cross)" Tag="CrossSwap">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Switch" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-            <ui:NavigationViewItem Content="Grid Swap" Tag="UniformGridSwap">
-                <ui:NavigationViewItem.IconSource>
-                    <ui:SymbolIconSource Symbol="Shuffle" />
-                </ui:NavigationViewItem.IconSource>
-            </ui:NavigationViewItem>
-
-        </ui:NavigationView.MenuItems>
+                    </ListBox>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
 
         <!--  Main content area  -->
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled">
             <ContentControl x:Name="DemoContent" />
         </ScrollViewer>
 
-    </ui:NavigationView>
+    </Grid>
 </Window>

@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Sortable.Avalonia.Demo.Models"
     xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
     xmlns:logmodels="using:Sortable.Avalonia.Demo.Models"
     x:DataType="vm:GridLayoutDemoViewModel"
@@ -21,12 +20,17 @@
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                 Text="Drag tiles to customize your dashboard layout. Each widget shows an icon, name, and live count."
                 TextWrapping="Wrap" />
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Message="Drag tiles to rearrange. Programmatic buttons animate moves smoothly."
-                Severity="Informational"
-                Title="Tip" />
+                        <Border
+                Padding="12,8"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                BorderThickness="3,0,0,0"
+                Background="{DynamicResource InfoBarBackgroundBrush}"
+                CornerRadius="0,4,4,0">
+                <StackPanel Spacing="2">
+                    <TextBlock FontWeight="SemiBold" Text="Tip" />
+                    <TextBlock Text="Drag tiles to rearrange. Programmatic buttons animate moves smoothly." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button Theme="{StaticResource AccentButtonTheme}" Command="{Binding SortGridItemsProgrammaticallyCommand}" Content="Move Last Widget to Top" />
                 <Button Command="{Binding RandomizeGridItemsCommand}" Content="Shuffle Widgets" />
@@ -104,7 +108,7 @@
                 <StackPanel Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                            <ui:SymbolIcon FontSize="14" Symbol="Clock" VerticalAlignment="Center" />
+                            <TextBlock Text="⏱" FontSize="14" VerticalAlignment="Center" />
                             <TextBlock FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Text="Event Log" />
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding ClearEventLogCommand}" Content="Clear" />

@@ -2,11 +2,44 @@
     x:Class="Sortable.Avalonia.Demo.App"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
     RequestedThemeVariant="Default">
     <!--  "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options.  -->
 
     <Application.Styles>
-        <styling:FluentAvaloniaTheme />
+        <FluentTheme />
     </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="CardBackgroundFillColorDisabledBrush" Color="#ADADAD" />
+                    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#19000000" />
+                    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#9B9B9B" />
+                    <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#F9F9F9" />
+                    <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#09000000" />
+                    <SolidColorBrush x:Key="InfoBarBackgroundBrush" Color="#E8F4FE" />
+                    <SolidColorBrush x:Key="InfoBarSuccessBackgroundBrush" Color="#DFF6DD" />
+                    <SolidColorBrush x:Key="NavPaneBackgroundBrush" Color="#F3F3F3" />
+                    <SolidColorBrush x:Key="NavPaneBorderBrush" Color="#E5E5E5" />
+                    <SolidColorBrush x:Key="NavHeaderForegroundBrush" Color="#717171" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#FF2D2D2D" />
+                    <SolidColorBrush x:Key="CardBackgroundFillColorDisabledBrush" Color="#272727" />
+                    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#1AFFFFFF" />
+                    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#9D9D9D" />
+                    <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#FF1A1A1A" />
+                    <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="InfoBarBackgroundBrush" Color="#1A3A5C" />
+                    <SolidColorBrush x:Key="InfoBarSuccessBackgroundBrush" Color="#1A3A1F" />
+                    <SolidColorBrush x:Key="NavPaneBackgroundBrush" Color="#202020" />
+                    <SolidColorBrush x:Key="NavPaneBorderBrush" Color="#383838" />
+                    <SolidColorBrush x:Key="NavHeaderForegroundBrush" Color="#9D9D9D" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="{DynamicResource SystemAccentColor}" />
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

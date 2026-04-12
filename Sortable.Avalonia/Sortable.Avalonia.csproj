@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
+        <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <Title>Sortable.Avalonia</Title>
@@ -12,8 +12,8 @@
         <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Sortable.Avalonia</PackageId>
-        <Version>2.1.1</Version>
-        <PackageReleaseNotes>Feature: Add support for custom dragging template</PackageReleaseNotes>
+        <Version>2.2.0</Version>
+        <PackageReleaseNotes>Migrate to Avalonia 12.0 base</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 
@@ -22,7 +22,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Avalonia" Version="11.3.12" />
+      <PackageReference Include="Avalonia" Version="12.0.0" />
     </ItemGroup>
 
     <ItemGroup>

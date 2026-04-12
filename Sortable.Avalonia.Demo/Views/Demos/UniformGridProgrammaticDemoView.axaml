@@ -7,7 +7,6 @@
     xmlns:models="using:Sortable.Avalonia.Demo.Models"
     xmlns:sortable="clr-namespace:Sortable.Avalonia;assembly=Sortable.Avalonia"
     xmlns:vm="using:Sortable.Avalonia.Demo.ViewModels.Demos"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     x:DataType="vm:UniformGridProgrammaticDemoViewModel"
     mc:Ignorable="d">
     <Design.DataContext>
@@ -24,12 +23,17 @@
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                 Text="Use buttons to move items across UniformGrid collections in code and observe programmatic transfer animation."
                 TextWrapping="Wrap" />
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Message="Items animate when moved programmatically between uniform grid collections."
-                Severity="Informational"
-                Title="Tip" />
+                        <Border
+                Padding="12,8"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                BorderThickness="3,0,0,0"
+                Background="{DynamicResource InfoBarBackgroundBrush}"
+                CornerRadius="0,4,4,0">
+                <StackPanel Spacing="2">
+                    <TextBlock FontWeight="SemiBold" Text="Tip" />
+                    <TextBlock Text="Items animate when moved programmatically between uniform grid collections." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
 
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Button Theme="{StaticResource AccentButtonTheme}" Command="{Binding MoveTopAToBCommand}" Content="Move Top A to B" />
