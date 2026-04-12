@@ -83,7 +83,7 @@
                                         </Border>
                                     </Grid>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                        <TextBox Text="{Binding Note, Mode=TwoWay}" Watermark="Add execution note…" />
+                                        <TextBox Text="{Binding Note, Mode=TwoWay}" PlaceholderText="Add execution note…" />
                                         <CheckBox Grid.Column="1" Content="Done" IsChecked="{Binding Reviewed, Mode=TwoWay}" />
                                         <Button Grid.Column="2" Content="Open" />
                                     </Grid>
