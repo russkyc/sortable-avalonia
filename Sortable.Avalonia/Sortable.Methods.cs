@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // 
 // Copyright (c) 2026 Russell Camo (russkyc)
 // 
@@ -653,7 +653,9 @@ public partial class Sortable
         if (topLevel != null)
         {
             var pointerPosition = e.GetPosition(topLevel);
+            _lastPointerPositionInTopLevel = pointerPosition;
             CreateDragOverlay(control, topLevel, pointerPosition);
+            StartAutoScrollTimer();
         }
 
         // Keep source item visible as the in-list placeholder during drag.
@@ -825,7 +827,29 @@ public partial class Sortable
         return Math.Round(value * renderScaling) / renderScaling;
     }
 
+    private static Point GetPosition(PointerEventArgs? e, Visual visual, TopLevel topLevel)
+    {
+        if (e != null)
+        {
+            return e.GetPosition(visual);
+        }
+        return topLevel.TranslatePoint(_lastPointerPositionInTopLevel, visual) ?? new Point(0, 0);
+    }
+
     private static void OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (!_isDragging || _draggedElement == null) return;
+
+        var topLevel = TopLevel.GetTopLevel(_draggedElement);
+        if (topLevel != null)
+        {
+            _lastPointerPositionInTopLevel = e.GetPosition(topLevel);
+        }
+
+        ProcessPointerPosition(e);
+    }
+
+    private static void ProcessPointerPosition(PointerEventArgs? e)
     {
         if (!_isDragging || _draggedElement == null) return;
 
@@ -839,9 +863,8 @@ public partial class Sortable
         var topLevel = TopLevel.GetTopLevel(_draggedElement);
         if (topLevel != null && _dragProxy != null)
         {
-            var currentPointerPosition = e.GetPosition(topLevel);
-            var left = SnapToDevicePixels(currentPointerPosition.X + _dragProxyOffset.X, topLevel.RenderScaling);
-            var top = SnapToDevicePixels(currentPointerPosition.Y + _dragProxyOffset.Y, topLevel.RenderScaling);
+            var left = SnapToDevicePixels(_lastPointerPositionInTopLevel.X + _dragProxyOffset.X, topLevel.RenderScaling);
+            var top = SnapToDevicePixels(_lastPointerPositionInTopLevel.Y + _dragProxyOffset.Y, topLevel.RenderScaling);
             Canvas.SetLeft(_dragProxy, left);
             Canvas.SetTop(_dragProxy, top);
         }
@@ -892,8 +915,18 @@ public partial class Sortable
         if (isCrossCollection)
         {
             // For cross-collection hovers, use pointer position in the active target panel.
+            if (topLevel != null)
+            {
+                var currentPosition = GetPosition(e, activePanel, topLevel);
+                hoverIndex = FindClosestSlot(currentPosition, includeTerminalSlot: true);
+                hoverIndex = Math.Max(0, Math.Min(hoverIndex, LogicalChildren.Count));
 
-
+                if (hoverIndex != _currentIndex)
+                {
+                    _currentIndex = hoverIndex;
+                    UpdatePreviewLayout();
+                }
+            }
         }
         else
         {
@@ -906,37 +939,40 @@ public partial class Sortable
             }
 
             // Continue with normal drag within original ItemsControl.
-            var currentPosition = e.GetPosition(panel);
-            var draggedVirtualBounds = container.Bounds.Translate(currentPosition - _dragStartPoint);
-            var draggedCenter = GetBoundsCenter(draggedVirtualBounds);
-            hoverIndex = FindClosestSlot(draggedCenter, includeTerminalSlot: false);
-
-            hoverIndex = Math.Max(0, Math.Min(hoverIndex, LogicalChildren.Count));
-
-            if (hoverIndex != _currentIndex)
+            if (topLevel != null)
             {
-                _currentIndex = hoverIndex;
-                UpdatePreviewLayout();
-            }
+                var currentPosition = GetPosition(e, panel, topLevel);
+                var draggedVirtualBounds = container.Bounds.Translate(currentPosition - _dragStartPoint);
+                var draggedCenter = GetBoundsCenter(draggedVirtualBounds);
+                hoverIndex = FindClosestSlot(draggedCenter, includeTerminalSlot: false);
 
-            if (isCrossCollection)
-            {
-                UpdateCrossCollectionPlaceholder();
+                hoverIndex = Math.Max(0, Math.Min(hoverIndex, LogicalChildren.Count));
+
+                if (hoverIndex != _currentIndex)
+                {
+                    _currentIndex = hoverIndex;
+                    UpdatePreviewLayout();
+                }
             }
-            else
-            {
-                HideCrossCollectionPlaceholder();
-            }
-            // else: container is null, skip preview transform and index update
+        }
+
+        if (isCrossCollection)
+        {
+            UpdateCrossCollectionPlaceholder();
+        }
+        else
+        {
+            HideCrossCollectionPlaceholder();
         }
     }
 
-    private static void TrackHoveredItemsControl(PointerEventArgs e)
+    private static void TrackHoveredItemsControl(PointerEventArgs? e)
     {
         var topLevel = TopLevel.GetTopLevel(_draggedElement);
+        if (topLevel == null) return;
 
-        var position = e.GetPosition(topLevel);
-        var hoveredElements = topLevel?.GetVisualsAt(position) ?? [];
+        var position = e != null ? e.GetPosition(topLevel) : _lastPointerPositionInTopLevel;
+        var hoveredElements = topLevel.GetVisualsAt(position) ?? [];
         _outsideDroppableAndSortableBounds = hoveredElements.All(t => 
         {
             var itemsControl = t.FindAncestorOfType<ItemsControl>();
@@ -946,12 +982,12 @@ public partial class Sortable
         });
     }
 
-    private static ItemsControl? FindHoveredItemsControl(PointerEventArgs e)
+    private static ItemsControl? FindHoveredItemsControl(PointerEventArgs? e)
     {
         var topLevel = TopLevel.GetTopLevel(_draggedElement);
         if (topLevel == null) return null;
 
-        var position = e.GetPosition(topLevel);
+        var position = e != null ? e.GetPosition(topLevel) : _lastPointerPositionInTopLevel;
         var hoveredElements = topLevel.GetVisualsAt(position).ToList();
 
         // First pass: look for sortable ItemsControl directly
@@ -1035,7 +1071,7 @@ public partial class Sortable
         return !string.IsNullOrEmpty(_sourceGroup) && targetGroup == _sourceGroup;
     }
 
-    private static void SwitchToNewItemsControl(ItemsControl newItemsControl, PointerEventArgs e)
+    private static void SwitchToNewItemsControl(ItemsControl newItemsControl, PointerEventArgs? e)
     {
         if (!CanAcceptDragTarget(newItemsControl)) return;
 
@@ -1090,7 +1126,9 @@ public partial class Sortable
         }
 
         // Find hover position in new control
-        var position = e.GetPosition(newPanel);
+        var topLevel = TopLevel.GetTopLevel(_draggedElement);
+        if (topLevel == null) return;
+        var position = GetPosition(e, newPanel, topLevel);
         var isCrossCollectionTarget = !ReferenceEquals(_sourceCollection, _targetCollection);
         int hoverIndex = FindClosestSlot(position, includeTerminalSlot: isCrossCollectionTarget);
 
@@ -1106,6 +1144,161 @@ public partial class Sortable
         else
         {
             HideCrossCollectionPlaceholder();
+        }
+    }
+
+    private static void StartAutoScrollTimer()
+    {
+        _lastAutoScrollTime = DateTime.UtcNow;
+        if (_autoScrollTimer == null)
+        {
+            _autoScrollTimer = new DispatcherTimer(DispatcherPriority.Normal)
+            {
+                Interval = TimeSpan.FromMilliseconds(20) // ~50 FPS
+            };
+            _autoScrollTimer.Tick += AutoScrollTimer_Tick;
+        }
+        _autoScrollTimer.Start();
+    }
+
+    private static void StopAutoScrollTimer()
+    {
+        _autoScrollTimer?.Stop();
+    }
+
+    private static ScrollViewer? FindScrollViewerAncestor(Visual? start, bool vertical)
+    {
+        var current = start;
+        while (current != null)
+        {
+            if (current is ScrollViewer scrollViewer)
+            {
+                if (vertical && scrollViewer.Extent.Height > scrollViewer.Viewport.Height)
+                {
+                    return scrollViewer;
+                }
+                if (!vertical && scrollViewer.Extent.Width > scrollViewer.Viewport.Width)
+                {
+                    return scrollViewer;
+                }
+            }
+            current = current.GetVisualParent();
+        }
+        return null;
+    }
+
+    private static void AutoScrollTimer_Tick(object? sender, EventArgs e)
+    {
+        if (!_isDragging || _draggedElement == null)
+        {
+            StopAutoScrollTimer();
+            return;
+        }
+
+        var topLevel = TopLevel.GetTopLevel(_draggedElement);
+        if (topLevel == null) return;
+
+        var itemsControl = _currentItemsControl;
+        if (itemsControl == null) return;
+
+        if (!GetAutoScroll(itemsControl)) return;
+
+        var threshold = GetAutoScrollThreshold(itemsControl);
+        var maxSpeed = GetAutoScrollSpeed(itemsControl);
+
+        double scrollX = 0;
+        double scrollY = 0;
+        ScrollViewer? verticalScrollViewer = null;
+        ScrollViewer? horizontalScrollViewer = null;
+
+        // Find vertical ScrollViewer
+        var vScrollViewer = FindScrollViewerAncestor(itemsControl, vertical: true);
+        if (vScrollViewer != null)
+        {
+            var posInV = topLevel.TranslatePoint(_lastPointerPositionInTopLevel, vScrollViewer);
+            if (posInV.HasValue)
+            {
+                var pos = posInV.Value;
+                if (pos.Y >= -threshold && pos.Y <= threshold)
+                {
+                    double ratio = (threshold - Math.Max(-threshold, pos.Y)) / threshold;
+                    ratio = Math.Clamp(ratio, 0.0, 1.0);
+                    scrollY = -maxSpeed * ratio;
+                    verticalScrollViewer = vScrollViewer;
+                }
+                else if (pos.Y >= vScrollViewer.Bounds.Height - threshold && pos.Y <= vScrollViewer.Bounds.Height + threshold)
+                {
+                    double ratio = (Math.Min(vScrollViewer.Bounds.Height + threshold, pos.Y) - (vScrollViewer.Bounds.Height - threshold)) / threshold;
+                    ratio = Math.Clamp(ratio, 0.0, 1.0);
+                    scrollY = maxSpeed * ratio;
+                    verticalScrollViewer = vScrollViewer;
+                }
+            }
+        }
+
+        // Find horizontal ScrollViewer
+        var hScrollViewer = FindScrollViewerAncestor(itemsControl, vertical: false);
+        if (hScrollViewer != null)
+        {
+            var posInH = topLevel.TranslatePoint(_lastPointerPositionInTopLevel, hScrollViewer);
+            if (posInH.HasValue)
+            {
+                var pos = posInH.Value;
+                if (pos.X >= -threshold && pos.X <= threshold)
+                {
+                    double ratio = (threshold - Math.Max(-threshold, pos.X)) / threshold;
+                    ratio = Math.Clamp(ratio, 0.0, 1.0);
+                    scrollX = -maxSpeed * ratio;
+                    horizontalScrollViewer = hScrollViewer;
+                }
+                else if (pos.X >= hScrollViewer.Bounds.Width - threshold && pos.X <= hScrollViewer.Bounds.Width + threshold)
+                {
+                    double ratio = (Math.Min(hScrollViewer.Bounds.Width + threshold, pos.X) - (hScrollViewer.Bounds.Width - threshold)) / threshold;
+                    ratio = Math.Clamp(ratio, 0.0, 1.0);
+                    scrollX = maxSpeed * ratio;
+                    horizontalScrollViewer = hScrollViewer;
+                }
+            }
+        }
+
+        var now = DateTime.UtcNow;
+        double elapsedSeconds = (now - _lastAutoScrollTime).TotalSeconds;
+        _lastAutoScrollTime = now;
+
+        bool scrolled = false;
+
+        if (verticalScrollViewer != null && Math.Abs(scrollY) > 0.01)
+        {
+            var currentOffset = verticalScrollViewer.Offset;
+            var newY = Math.Clamp(currentOffset.Y + scrollY * elapsedSeconds, 0, Math.Max(0, verticalScrollViewer.Extent.Height - verticalScrollViewer.Viewport.Height));
+            if (newY != currentOffset.Y)
+            {
+                verticalScrollViewer.Offset = new Vector(currentOffset.X, newY);
+                scrolled = true;
+            }
+        }
+
+        if (horizontalScrollViewer != null && Math.Abs(scrollX) > 0.01)
+        {
+            var currentOffset = horizontalScrollViewer.Offset;
+            var newX = Math.Clamp(currentOffset.X + scrollX * elapsedSeconds, 0, Math.Max(0, horizontalScrollViewer.Extent.Width - horizontalScrollViewer.Viewport.Width));
+            if (newX != currentOffset.X)
+            {
+                var yVal = (verticalScrollViewer == horizontalScrollViewer && scrolled) ? horizontalScrollViewer.Offset.Y : currentOffset.Y;
+                horizontalScrollViewer.Offset = new Vector(newX, yVal);
+                scrolled = true;
+            }
+        }
+
+        if (scrolled)
+        {
+            // Trigger preview layout refresh since content moved under the pointer.
+            // Call synchronously so the layout updates immediately in the current frame to prevent jitter.
+            ProcessPointerPosition(null);
+        }
+        else
+        {
+            _lastAutoScrollTime = now;
         }
     }
 
@@ -2043,6 +2236,8 @@ public partial class Sortable
         if (!_isDragging || _draggedElement == null || _endDragInProgress) return;
 
         _endDragInProgress = true;
+
+        StopAutoScrollTimer();
 
         var container = _draggedElement.FindAncestorOfType<ContentPresenter>();
         var itemsControl = _currentItemsControl ?? _draggedElement.FindAncestorOfType<ItemsControl>();

@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // 
 // Copyright (c) 2026 Russell Camo (russkyc)
 // 
@@ -30,6 +30,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 
 namespace Sortable.Avalonia;
 
@@ -280,6 +281,54 @@ public partial class Sortable
     /// </summary>
     public static void SetDraggingTemplate(ItemsControl element, DataTemplate? value) => element.SetValue(DraggingTemplateProperty, value);
 
+    /// <summary>
+    /// Enables auto-scrolling when dragging near the edges of a ScrollViewer.
+    /// </summary>
+    public static readonly AttachedProperty<bool> AutoScrollProperty =
+        AvaloniaProperty.RegisterAttached<Sortable, ItemsControl, bool>("AutoScroll", defaultValue: false);
+
+    /// <summary>
+    /// Gets whether auto-scrolling is enabled for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static bool GetAutoScroll(ItemsControl element) => element.GetValue(AutoScrollProperty);
+
+    /// <summary>
+    /// Sets whether auto-scrolling is enabled for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static void SetAutoScroll(ItemsControl element, bool value) => element.SetValue(AutoScrollProperty, value);
+
+    /// <summary>
+    /// The threshold in pixels from the edge of the ScrollViewer to trigger auto-scrolling.
+    /// </summary>
+    public static readonly AttachedProperty<double> AutoScrollThresholdProperty =
+        AvaloniaProperty.RegisterAttached<Sortable, ItemsControl, double>("AutoScrollThreshold", defaultValue: 40.0);
+
+    /// <summary>
+    /// Gets the auto-scroll threshold for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static double GetAutoScrollThreshold(ItemsControl element) => element.GetValue(AutoScrollThresholdProperty);
+
+    /// <summary>
+    /// Sets the auto-scroll threshold for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static void SetAutoScrollThreshold(ItemsControl element, double value) => element.SetValue(AutoScrollThresholdProperty, value);
+
+    /// <summary>
+    /// The maximum scrolling speed in pixels per second.
+    /// </summary>
+    public static readonly AttachedProperty<double> AutoScrollSpeedProperty =
+        AvaloniaProperty.RegisterAttached<Sortable, ItemsControl, double>("AutoScrollSpeed", defaultValue: 600.0);
+
+    /// <summary>
+    /// Gets the auto-scroll speed for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static double GetAutoScrollSpeed(ItemsControl element) => element.GetValue(AutoScrollSpeedProperty);
+
+    /// <summary>
+    /// Sets the auto-scroll speed for the specified <see cref="ItemsControl"/>.
+    /// </summary>
+    public static void SetAutoScrollSpeed(ItemsControl element, double value) => element.SetValue(AutoScrollSpeedProperty, value);
+
     private const double PlaceholderOpacity = 0.5;
     private static readonly TimeSpan DefaultAnimationDuration = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan MinimumAnimationDuration = TimeSpan.FromMilliseconds(1);
@@ -302,6 +351,9 @@ public partial class Sortable
     private static ContentPresenter? _crossCollectionPlaceholder; // Uses target ItemTemplate for cross-collection preview
     private static RenderTargetBitmap? _dragProxyBitmap; // Snapshot used by the drag proxy
     private static Point _dragProxyOffset; // Offset from pointer to proxy top-left
+    private static DispatcherTimer? _autoScrollTimer;
+    private static Point _lastPointerPositionInTopLevel;
+    private static DateTime _lastAutoScrollTime;
 
     // PROXY PREVIEW STATE
     private static int _originalIndex;

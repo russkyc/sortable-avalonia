@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Sortable.Avalonia.Demo.Views.Demos.VerticalListDemoView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -40,6 +40,7 @@
                 MaxWidth="640"
                 HorizontalAlignment="Left"
                 sortable:Sortable.Sortable="True"
+                sortable:Sortable.AutoScroll="True"
                 sortable:Sortable.ReleaseCommand="{Binding ItemReleasedCommand}"
                 sortable:Sortable.UpdateCommand="{Binding ItemUpdatedCommand}"
                 ItemsSource="{Binding SimpleList}">
