@@ -341,7 +341,7 @@ public partial class Sortable
             return;
         }
 
-        if (FindItemPresenter(targetItemsControl, item) is not { } targetPresenter)
+        if (FindItemContainer(targetItemsControl, item) is not { } targetPresenter)
         {
             return;
         }
@@ -459,11 +459,11 @@ public partial class Sortable
         }
     }
 
-    private static ContentPresenter? FindItemPresenter(ItemsControl itemsControl, object item)
+    private static Control? FindItemContainer(ItemsControl itemsControl, object item)
     {
         return itemsControl.ItemsPanelRoot?.Children
-            .OfType<ContentPresenter>()
-            .FirstOrDefault(child => ReferenceEquals(child.DataContext, item));
+            .OfType<Control>()
+            .FirstOrDefault(child => itemsControl.IndexFromContainer(child) != -1 && ReferenceEquals(child.DataContext, item));
     }
 
     private static void QueueProgrammaticLayoutAnimation(ItemsControl itemsControl)
@@ -499,8 +499,9 @@ public partial class Sortable
         var animationDuration = GetAnimationDurationSpan(itemsControl);
         var nowBounds = CaptureItemBounds(itemsControl);
 
-        foreach (var child in panel.Children.OfType<ContentPresenter>())
+        foreach (var child in panel.Children.OfType<Control>())
         {
+            if (itemsControl.IndexFromContainer(child) == -1) continue;
             var item = child.DataContext;
             if (item == null)
             {
@@ -563,9 +564,9 @@ public partial class Sortable
             return result;
         }
 
-        foreach (var child in panel.Children.OfType<ContentPresenter>())
+        foreach (var child in panel.Children.OfType<Control>())
         {
-            if (child.DataContext != null)
+            if (itemsControl.IndexFromContainer(child) != -1 && child.DataContext != null)
             {
                 result[child.DataContext] = child.Bounds;
             }
@@ -624,10 +625,12 @@ public partial class Sortable
             return;
         }
 
-        var container = control.FindAncestorOfType<ContentPresenter>();
         var itemsControl = FindSortableItemsControl(control);
+        if (itemsControl == null) return;
+
+        var container = FindItemContainer(itemsControl, control);
         var panel = container?.FindAncestorOfType<Panel>();
-        if (panel == null || container == null || itemsControl == null) return;
+        if (panel == null || container == null) return;
 
         if (!CanStartDragFromPointerOrigin(control, e))
         {
@@ -637,7 +640,8 @@ public partial class Sortable
         // Check if this item is marked as sortable (same-collection sort enabled)
         _isSortableOnly = GetIsSortable(control);
 
-        _isDragging = true;
+        _isPressed = true;
+        _isDragging = false;
         _draggedElement = control;
         _dragStartPoint = e.GetPosition(panel);
         _currentItemsControl = itemsControl;
@@ -648,18 +652,14 @@ public partial class Sortable
 
         CacheLayoutSlots(panel, container, itemsControl);
 
-        // Create drag overlay BEFORE hiding original element.
-        var topLevel = TopLevel.GetTopLevel(control);
-        if (topLevel != null)
+        if (itemsControl is SelectingItemsControl selectingItemsControl)
         {
-            var pointerPosition = e.GetPosition(topLevel);
-            _lastPointerPositionInTopLevel = pointerPosition;
-            CreateDragOverlay(control, topLevel, pointerPosition);
-            StartAutoScrollTimer();
+            var index = LogicalChildren.IndexOf(container);
+            if (index != -1)
+            {
+                selectingItemsControl.SelectedIndex = index;
+            }
         }
-
-        // Keep source item visible as the in-list placeholder during drag.
-        control.Opacity = PlaceholderOpacity;
 
         e.Pointer.Capture(control);
         e.Handled = true;
@@ -696,17 +696,17 @@ public partial class Sortable
 
     // ...existing code...
 
-    private static void CacheLayoutSlots(Panel panel, ContentPresenter container, ItemsControl itemsControl)
+    private static void CacheLayoutSlots(Panel panel, Control container, ItemsControl itemsControl)
     {
         LogicalChildren.Clear();
         SlotBounds.Clear();
 
         foreach (var child in panel.Children)
         {
-            if (child is ContentPresenter cp)
+            if (child is Control c && itemsControl.IndexFromContainer(c) != -1)
             {
-                LogicalChildren.Add(cp);
-                SlotBounds.Add(cp.Bounds);
+                LogicalChildren.Add(c);
+                SlotBounds.Add(c.Bounds);
             }
         }
 
@@ -717,7 +717,7 @@ public partial class Sortable
         _draggedData = GetDraggedData(container, itemsControl);
     }
 
-    private static object? GetDraggedData(ContentPresenter container, ItemsControl itemsControl)
+    private static object? GetDraggedData(Control container, ItemsControl itemsControl)
     {
         if (_originalIndex >= 0 && itemsControl.ItemsSource is IList list && _originalIndex < list.Count)
         {
@@ -838,12 +838,39 @@ public partial class Sortable
 
     private static void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_isDragging || _draggedElement == null) return;
+        if (!_isPressed || _draggedElement == null) return;
 
         var topLevel = TopLevel.GetTopLevel(_draggedElement);
-        if (topLevel != null)
+        if (topLevel == null) return;
+
+        var currentTopLevelPos = e.GetPosition(topLevel);
+        _lastPointerPositionInTopLevel = currentTopLevelPos;
+
+        if (!_isDragging)
         {
-            _lastPointerPositionInTopLevel = e.GetPosition(topLevel);
+            var container = _currentItemsControl != null ? FindItemContainer(_currentItemsControl, _draggedElement) : null;
+            var panel = container?.FindAncestorOfType<Panel>();
+            if (panel == null || container == null) return;
+
+            var currentPanelPos = e.GetPosition(panel);
+            var distance = Point.Distance(currentPanelPos, _dragStartPoint);
+            if (distance > 5)
+            {
+                _isDragging = true;
+
+                // Create drag overlay
+                CreateDragOverlay(_draggedElement, topLevel, currentTopLevelPos);
+
+                // Start AutoScroll timer
+                StartAutoScrollTimer();
+
+                // Set opacity
+                _draggedElement.Opacity = PlaceholderOpacity;
+            }
+            else
+            {
+                return;
+            }
         }
 
         ProcessPointerPosition(e);
@@ -855,7 +882,7 @@ public partial class Sortable
 
         TrackHoveredItemsControl(e);
 
-        var container = _draggedElement.FindAncestorOfType<ContentPresenter>();
+        var container = _currentItemsControl != null ? FindItemContainer(_currentItemsControl, _draggedElement) : null;
         var panel = container?.FindAncestorOfType<Panel>();
         if (panel == null || container == null) return;
 
@@ -891,10 +918,10 @@ public partial class Sortable
         SlotBounds.Clear();
         foreach (var child in activePanel.Children)
         {
-            if (child is ContentPresenter cp)
+            if (child is Control c && _currentItemsControl != null && _currentItemsControl.IndexFromContainer(c) != -1)
             {
-                LogicalChildren.Add(cp);
-                SlotBounds.Add(cp.Bounds);
+                LogicalChildren.Add(c);
+                SlotBounds.Add(c.Bounds);
             }
         }
 
@@ -944,7 +971,7 @@ public partial class Sortable
                 var currentPosition = GetPosition(e, panel, topLevel);
                 var draggedVirtualBounds = container.Bounds.Translate(currentPosition - _dragStartPoint);
                 var draggedCenter = GetBoundsCenter(draggedVirtualBounds);
-                hoverIndex = FindClosestSlot(draggedCenter, includeTerminalSlot: false);
+                hoverIndex = FindClosestSlot(draggedCenter, includeTerminalSlot: true);
 
                 hoverIndex = Math.Max(0, Math.Min(hoverIndex, LogicalChildren.Count));
 
@@ -1061,6 +1088,20 @@ public partial class Sortable
         return null;
     }
 
+    private static Control? FindItemContainer(ItemsControl itemsControl, Visual? child)
+    {
+        var current = child;
+        while (current != null && current != itemsControl)
+        {
+            if (current is Control control && itemsControl.IndexFromContainer(control) != -1)
+            {
+                return control;
+            }
+            current = current.GetVisualParent();
+        }
+        return null;
+    }
+
     private static bool CanAcceptDragTarget(ItemsControl itemsControl)
     {
         if (itemsControl == _currentItemsControl) return false;
@@ -1111,10 +1152,10 @@ public partial class Sortable
 
         foreach (var child in newPanel.Children)
         {
-            if (child is ContentPresenter cp)
+            if (child is Control c && newItemsControl.IndexFromContainer(c) != -1)
             {
-                LogicalChildren.Add(cp);
-                SlotBounds.Add(cp.Bounds);
+                LogicalChildren.Add(c);
+                SlotBounds.Add(c.Bounds);
             }
         }
 
@@ -1532,7 +1573,7 @@ public partial class Sortable
         return transferMode == SortableTransferMode.Swap;
     }
 
-    private static void ApplyPreviewTransform(ContentPresenter child, int currentSlotIndex, int previewSlotIndex,
+    private static void ApplyPreviewTransform(Control child, int currentSlotIndex, int previewSlotIndex,
         TimeSpan duration)
     {
         // Validate current index is within bounds
@@ -2033,7 +2074,7 @@ public partial class Sortable
         _crossCollectionPlaceholder = null;
     }
 
-    private static void CleanupProxyTransforms(ContentPresenter? container)
+    private static void CleanupProxyTransforms(Control? container)
     {
         foreach (var child in LogicalChildren)
         {
@@ -2091,6 +2132,12 @@ public partial class Sortable
             return;
         }
 
+        object? selectedItem = null;
+        if (itemsControl is SelectingItemsControl selectingItemsControl)
+        {
+            selectedItem = selectingItemsControl.SelectedItem;
+        }
+
         if (_outsideDroppableAndSortableBounds)
         {
             ExecuteReleaseCommand(null);
@@ -2103,6 +2150,14 @@ public partial class Sortable
         {
             // Same-collection reorder is now fully command-driven.
             ExecuteUpdateCommand(null);
+        }
+
+        if (itemsControl is SelectingItemsControl selControl && selectedItem != null)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                selControl.SelectedItem = selectedItem;
+            });
         }
     }
 
@@ -2210,6 +2265,7 @@ public partial class Sortable
     {
         ClearCrossCollectionPanelReserve();
 
+        _isPressed = false;
         _isDragging = false;
         _draggedElement = null;
         _draggedData = null;
@@ -2233,14 +2289,22 @@ public partial class Sortable
 
     private static void EndDrag()
     {
-        if (!_isDragging || _draggedElement == null || _endDragInProgress) return;
+        if (!_isPressed || _endDragInProgress) return;
+
+        bool wasDragging = _isDragging;
+
+        if (!wasDragging)
+        {
+            ResetEngineState();
+            return;
+        }
 
         _endDragInProgress = true;
 
         StopAutoScrollTimer();
 
-        var container = _draggedElement.FindAncestorOfType<ContentPresenter>();
-        var itemsControl = _currentItemsControl ?? _draggedElement.FindAncestorOfType<ItemsControl>();
+        var itemsControl = _currentItemsControl ?? _draggedElement?.FindAncestorOfType<ItemsControl>();
+        var container = itemsControl != null && _draggedElement != null ? FindItemContainer(itemsControl, _draggedElement) : null;
         var originalItemsControl = _originalItemsControl;
 
         try

@@ -62,6 +62,7 @@ public partial class MainWindow : Window
             view = tag switch
             {
                 "VerticalList"               => new VerticalListDemoView { DataContext = vm.VerticalListDemo },
+                "ListBox"                    => new ListBoxDemoView { DataContext = vm.VerticalListDemo },
                 "HorizontalStack"            => new HorizontalStackDemoView { DataContext = vm.HorizontalStackDemo },
                 "GridLayout"                 => new GridLayoutDemoView { DataContext = vm.GridLayoutDemo },
                 "Kanban"                     => new KanbanBoardDemoView { DataContext = vm.KanbanBoardDemo },

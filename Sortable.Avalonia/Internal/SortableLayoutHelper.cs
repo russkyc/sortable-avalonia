@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using System.Collections.Generic;
@@ -10,13 +10,13 @@ namespace Sortable.Avalonia.Internal
     /// </summary>
     internal static class SortableLayoutHelper
     {
-        public static void CacheLayoutSlots(Panel panel, Control container, ItemsControl itemsControl, List<Rect> slotBounds, List<ContentPresenter> logicalChildren)
+        public static void CacheLayoutSlots(Panel panel, Control container, ItemsControl itemsControl, List<Rect> slotBounds, List<Control> logicalChildren)
         {
             slotBounds.Clear();
             logicalChildren.Clear();
             foreach (var item in itemsControl.Items)
             {
-                var cp = itemsControl.ContainerFromIndex(itemsControl.Items.IndexOf(item)) as ContentPresenter;
+                var cp = itemsControl.ContainerFromIndex(itemsControl.Items.IndexOf(item));
                 if (cp != null)
                 {
                     logicalChildren.Add(cp);
