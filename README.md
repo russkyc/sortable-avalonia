@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
 <img src=".github/resources/media/icon.png" style="width: 120px;" />
 </p>
 
@@ -17,6 +17,10 @@
 MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-and-drop reordering, cross-collection transfers, reversible drop operations, drag handles, sort/swap modes, and animated programmatic updates.
 
 > [!NOTE]
+> #### Changes in Version 2.3.0
+> - **AutoScroll Support**: Scroll parent/ancestor ScrollViewer viewports automatically when dragging near edges.
+> - **ListBox Compatibility**: Supports native `ListBox` (and `SelectingItemsControl` derivatives) with selection persistence.
+> - **AOT & GC Performance**: Full Ahead-of-Time compilation support (`IsAotCompatible`) and zero heap allocations on hot drag paths.
 > #### Changes in Version 2.2.0
 > - Package now targets NET 8.0 and NET 10.0 and now requires Avalonia 12.0+. Update your project references accordingly.
 > #### Changes in Version 2.0.0
@@ -69,13 +73,16 @@ MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-a
 | **Same-collection sorting** | Reorder items within one list via `Sortable` property |
 | **Cross-collection transfers** | Move/copy/swap items between lists via `Droppable` property |
 | **Reversible drops** | Accept/reject drops in handler before commit |
+| **Auto-scrolling** | Scroll parent/ancestor ScrollViewers automatically when dragging near viewport edges |
+| **ListBox Compatibility** | Supports reordering, selection updates, and click-through on native `ListBox` controls |
+| **AOT & High Performance** | Compiled with zero heap allocations on hot paths; fully compatible with NativeAOT |
 | **Transfer modes** | `Move`, `Copy`, `Swap` |
 | **Sortable modes** | `Sort` (shift), `Swap` (exchange) |
 | **Drag handles** | Restrict drag start to marked controls |
 | **Custom drag template** | Fully customize drag preview with `DraggingTemplate` |
 | **Animation** | Smooth transitions for interactive + programmatic changes |
 | **Groups** | Isolate interactions by group name |
-| **Mouse + Touch** | Unified pointer input on all platforms |
+| **Mouse + Touch** | Unified pointer input on all platforms with gesture-locking to prevent capture drops |
 | **Backward compatible** | Old `TransferCommand` still works |
 
 ## Installation
@@ -249,6 +256,9 @@ Tip: panel choice affects visual arrangement only; drag/drop behavior still depe
 | `Mode` | `SortableMode` | `Sort` | In-collection behavior: `Sort` or `Swap` |
 | `CrossCollectionTransferMode` | `SortableTransferMode` | `Move` | Default transfer mode: `Move`, `Copy`, or `Swap` |
 | `AnimationDuration` | `TimeSpan` | `0:0:0.250` | Animation duration (as TimeSpan, e.g. `0:0:0.500` for 500ms) |
+| `AutoScroll` | `bool` | `false` | Scroll ancestor ScrollViewer viewports automatically when dragging near viewport edges |
+| `AutoScrollThreshold` | `double` | `40.0` | Threshold distance in pixels from the edge of the viewport to start autoscrolling |
+| `AutoScrollSpeed` | `double` | `600.0` | Maximum scrolling speed in pixels per second |
 
 ### Item Attached Properties
 
@@ -766,7 +776,7 @@ sortable:Sortable.AnimationDuration="0:0:0.500"    <!-- Default: 0:0:0.250 -->
 
 **Rule:** Items only transfer between collections with matching `Group` values.
 
-## 18 Demo Scenarios
+## 19 Demo Scenarios
 
 Run the app to explore each demo in a dedicated tab:
 
@@ -790,6 +800,7 @@ Run the app to explore each demo in a dedicated tab:
 | 16 | **Sort Mode** | Default shift-based reordering within same list |
 | 17 | **Swap Mode** | Exchange positions (no shifting) within same list |
 | 18 | **Cross Swap** | Exchange items between two collections in one gesture |
+| 19 | **ListBox Demo** | Native ListBox with drag handle reordering, selection tracking, and touch locks |
 
 **Run:**
 
