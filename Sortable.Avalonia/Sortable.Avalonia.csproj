@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
+        <IsAotCompatible>true</IsAotCompatible>
         <Title>Sortable.Avalonia</Title>
         <Authors>russkyc</Authors>
         <Description>Drag-and-drop sorting and cross-collection transfer behaviors for Avalonia ItemsControl. Supports reordering, cross-collection transfers, reversible drops, drag handles, sort/swap modes, and animated programmatic updates. Mouse + touch support on Windows, macOS, Linux.</Description>

@@ -999,14 +999,34 @@ public partial class Sortable
         if (topLevel == null) return;
 
         var position = e != null ? e.GetPosition(topLevel) : _lastPointerPositionInTopLevel;
-        var hoveredElements = topLevel.GetVisualsAt(position) ?? [];
-        _outsideDroppableAndSortableBounds = hoveredElements.All(t => 
+        var hoveredElements = topLevel.GetVisualsAt(position);
+        if (hoveredElements == null)
+        {
+            _outsideDroppableAndSortableBounds = true;
+            return;
+        }
+
+        bool outside = true;
+        foreach (var t in hoveredElements)
         {
             var itemsControl = t.FindAncestorOfType<ItemsControl>();
-            if (itemsControl == null) return t != _originalItemsControl;
-            // A different ItemsControl, and is not droppable
-            return itemsControl != _originalItemsControl && !GetDroppable(itemsControl);
-        });
+            bool isOutside;
+            if (itemsControl == null)
+            {
+                isOutside = t != _originalItemsControl;
+            }
+            else
+            {
+                isOutside = itemsControl != _originalItemsControl && !GetDroppable(itemsControl);
+            }
+
+            if (!isOutside)
+            {
+                outside = false;
+                break;
+            }
+        }
+        _outsideDroppableAndSortableBounds = outside;
     }
 
     private static ItemsControl? FindHoveredItemsControl(PointerEventArgs? e)
@@ -1015,7 +1035,8 @@ public partial class Sortable
         if (topLevel == null) return null;
 
         var position = e != null ? e.GetPosition(topLevel) : _lastPointerPositionInTopLevel;
-        var hoveredElements = topLevel.GetVisualsAt(position).ToList();
+        var hoveredElements = topLevel.GetVisualsAt(position);
+        if (hoveredElements == null) return null;
 
         // First pass: look for sortable ItemsControl directly
         foreach (var element in hoveredElements)
@@ -1038,10 +1059,11 @@ public partial class Sortable
 
         // Third pass: Check sortable ItemsControls in the tree for bounds intersection.
         // This helps with empty ItemsControls that might not be in hit test results.
-        var allItemsControls = topLevel.GetVisualDescendants().OfType<ItemsControl>();
-        foreach (var itemsControl in allItemsControls)
+        foreach (var desc in topLevel.GetVisualDescendants())
         {
-            if (!CanAcceptDragTarget(itemsControl)) continue;
+            if (desc is ItemsControl itemsControl)
+            {
+                if (!CanAcceptDragTarget(itemsControl)) continue;
 
             var referenceVisual = (Visual)itemsControl;
             var boundsToCheck = itemsControl.Bounds;
@@ -1060,6 +1082,7 @@ public partial class Sortable
             if (bounds.Contains(position))
             {
                 return itemsControl;
+            }
             }
         }
 
