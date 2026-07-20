@@ -873,6 +873,8 @@ public partial class Sortable
             }
         }
 
+        e.Handled = true;
+
         ProcessPointerPosition(e);
     }
 
