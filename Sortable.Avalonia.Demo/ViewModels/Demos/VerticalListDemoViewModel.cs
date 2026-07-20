@@ -47,6 +47,20 @@ public partial class VerticalListDemoViewModel : DemoViewModelBase
             new SortableItem("Update analytics dashboard") { Tag = "P1", Note = "Product · Design ready" },
             new SortableItem("Migrate legacy endpoints") { Tag = "P2", Note = "Platform · Phase 2 scope" },
             new SortableItem("Audit third-party API tokens") { Tag = "P2", Note = "Security · Compliance due" },
+            new SortableItem("Update dependency packages") { Tag = "P3", Note = "Maintenance" },
+            new SortableItem("Redesign onboarding flow") { Tag = "P1", Note = "UX Design" },
+            new SortableItem("Refactor data layer caching") { Tag = "P1", Note = "Performance" },
+            new SortableItem("Fix memory leak in image parser") { Tag = "P0", Note = "Core Lib" },
+            new SortableItem("Document new WebSocket API") { Tag = "P2", Note = "Docs" },
+            new SortableItem("Set up nightly performance tests") { Tag = "P2", Note = "QA" },
+            new SortableItem("Optimize database indexes") { Tag = "P1", Note = "DB Admin" },
+            new SortableItem("Localize UI to French and Spanish") { Tag = "P3", Note = "L10n" },
+            new SortableItem("Improve test coverage of auth module") { Tag = "P2", Note = "Testing" },
+            new SortableItem("Add dark mode support") { Tag = "P3", Note = "Aesthetics" },
+            new SortableItem("Resolve race condition in message queue") { Tag = "P0", Note = "Infra" },
+            new SortableItem("Review community PRs") { Tag = "P2", Note = "OSS" },
+            new SortableItem("Update privacy policy page") { Tag = "P3", Note = "Legal" },
+            new SortableItem("Configure production alerting thresholds") { Tag = "P1", Note = "SRE" }
         ];
     }
 
