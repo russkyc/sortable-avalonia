@@ -342,6 +342,7 @@ public partial class Sortable
     private static readonly List<ProgrammaticRemovalSnapshot> PendingProgrammaticRemovals = new();
 
     // STATE
+    private static bool _isPressed;
     private static bool _isDragging;
     private static bool _outsideDroppableAndSortableBounds;
     private static Control? _draggedElement;
@@ -361,7 +362,7 @@ public partial class Sortable
     private static int _currentIndex;
 
     private static readonly List<Rect> SlotBounds = new();
-    private static readonly List<ContentPresenter> LogicalChildren = new();
+    private static readonly List<Control> LogicalChildren = new();
 
     private static object? _draggedData;
     private static ItemsControl? _currentItemsControl;

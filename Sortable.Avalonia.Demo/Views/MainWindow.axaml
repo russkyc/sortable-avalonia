@@ -71,6 +71,12 @@
                                 <TextBlock Text="Task Queue" VerticalAlignment="Center" />
                             </StackPanel>
                         </ListBoxItem>
+                        <ListBoxItem Tag="ListBox">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock FontSize="14" Text="≗" VerticalAlignment="Center" />
+                                <TextBlock Text="ListBox Demo" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
                         <ListBoxItem Tag="HorizontalStack">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock FontSize="14" Text="⊞" VerticalAlignment="Center" />
