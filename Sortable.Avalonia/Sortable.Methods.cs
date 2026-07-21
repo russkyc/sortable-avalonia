@@ -637,8 +637,8 @@ public partial class Sortable
             return;
         }
 
-        // Check if this item is marked as sortable (same-collection sort enabled)
-        _isSortableOnly = GetIsSortable(control);
+        // Check if this item or itemsControl is marked as sortable (same-collection sort enabled)
+        _isSortableOnly = GetIsSortable(control) || GetSortable(itemsControl);
 
         _isPressed = true;
         _isDragging = false;
@@ -884,10 +884,6 @@ public partial class Sortable
 
         TrackHoveredItemsControl(e);
 
-        var container = _currentItemsControl != null ? FindItemContainer(_currentItemsControl, _draggedElement) : null;
-        var panel = container?.FindAncestorOfType<Panel>();
-        if (panel == null || container == null) return;
-
         // Update drag proxy position in TopLevel coordinates
         var topLevel = TopLevel.GetTopLevel(_draggedElement);
         if (topLevel != null && _dragProxy != null)
@@ -914,7 +910,6 @@ public partial class Sortable
 
         _currentPanel = activePanel;
 
-
         // --- FIX: Always refresh LogicalChildren and SlotBounds before preview update ---
         LogicalChildren.Clear();
         SlotBounds.Clear();
@@ -927,8 +922,11 @@ public partial class Sortable
             }
         }
 
+        var container = _currentItemsControl != null ? FindItemContainer(_currentItemsControl, _draggedElement) : null;
+        var panel = container?.FindAncestorOfType<Panel>() ?? activePanel;
+
         // --- FIX: Recalculate _originalIndex to match the current index of the grabbed container ---
-        _originalIndex = LogicalChildren.IndexOf(container);
+        _originalIndex = container != null ? LogicalChildren.IndexOf(container) : -1;
 
         // Handle empty collections or dropping at the end
         if (LogicalChildren.Count == 0)
@@ -959,6 +957,8 @@ public partial class Sortable
         }
         else
         {
+            if (container == null) return;
+
             // Same collection - only allow reordering if IsSortable is enabled
             if (!_isSortableOnly)
             {
@@ -995,40 +995,68 @@ public partial class Sortable
         }
     }
 
+    private static bool IsValidCrossCollectionTarget(ItemsControl itemsControl)
+    {
+        if (itemsControl == _originalItemsControl) return true;
+        if (!GetDroppable(itemsControl)) return false;
+
+        var targetGroup = GetGroupFromItemsControl(itemsControl);
+        return !string.IsNullOrEmpty(_sourceGroup) && targetGroup == _sourceGroup;
+    }
+
     private static void TrackHoveredItemsControl(PointerEventArgs? e)
     {
         var topLevel = TopLevel.GetTopLevel(_draggedElement);
         if (topLevel == null) return;
 
         var position = e != null ? e.GetPosition(topLevel) : _lastPointerPositionInTopLevel;
+
         var hoveredElements = topLevel.GetVisualsAt(position);
-        if (hoveredElements == null)
+        if (hoveredElements != null)
         {
-            _outsideDroppableAndSortableBounds = true;
-            return;
+            foreach (var t in hoveredElements)
+            {
+                var itemsControl = t is ItemsControl ic ? ic : t.FindAncestorOfType<ItemsControl>();
+                if (itemsControl != null)
+                {
+                    if (IsValidCrossCollectionTarget(itemsControl))
+                    {
+                        _outsideDroppableAndSortableBounds = false;
+                        return;
+                    }
+                }
+            }
         }
 
-        bool outside = true;
-        foreach (var t in hoveredElements)
+        // Fallback: check visual tree bounds in case hit testing misses empty or non-hit-testable controls
+        foreach (var desc in topLevel.GetVisualDescendants())
         {
-            var itemsControl = t.FindAncestorOfType<ItemsControl>();
-            bool isOutside;
-            if (itemsControl == null)
+            if (desc is ItemsControl itemsControl)
             {
-                isOutside = t != _originalItemsControl;
-            }
-            else
-            {
-                isOutside = itemsControl != _originalItemsControl && !GetDroppable(itemsControl);
-            }
+                if (!IsValidCrossCollectionTarget(itemsControl)) continue;
 
-            if (!isOutside)
-            {
-                outside = false;
-                break;
+                var referenceVisual = (Visual)itemsControl;
+                var boundsToCheck = itemsControl.Bounds;
+
+                if ((boundsToCheck.Height == 0 || boundsToCheck.Width == 0) && itemsControl.Parent is Visual parent)
+                {
+                    referenceVisual = parent;
+                    boundsToCheck = parent.Bounds;
+                }
+
+                var visualPosition = referenceVisual.TranslatePoint(new Point(0, 0), topLevel);
+                if (!visualPosition.HasValue) continue;
+
+                var bounds = new Rect(visualPosition.Value, new Size(boundsToCheck.Width, boundsToCheck.Height));
+                if (bounds.Contains(position))
+                {
+                    _outsideDroppableAndSortableBounds = false;
+                    return;
+                }
             }
         }
-        _outsideDroppableAndSortableBounds = outside;
+
+        _outsideDroppableAndSortableBounds = true;
     }
 
     private static ItemsControl? FindHoveredItemsControl(PointerEventArgs? e)
