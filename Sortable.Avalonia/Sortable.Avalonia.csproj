@@ -13,8 +13,8 @@
         <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Sortable.Avalonia</PackageId>
-        <Version>2.3.0</Version>
-        <PackageReleaseNotes>Add AutoScroll, ListBox support, and AOT performance enhancements</PackageReleaseNotes>
+        <Version>2.3.1</Version>
+        <PackageReleaseNotes>Fix inconsistent droppable collection behavior and item freezing</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 

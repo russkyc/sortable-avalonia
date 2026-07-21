@@ -17,6 +17,9 @@
 MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-and-drop reordering, cross-collection transfers, reversible drop operations, drag handles, sort/swap modes, and animated programmatic updates.
 
 > [!NOTE]
+> #### Changes in Version 2.3.1
+> - Fixed issue with inconsistent droppable collection behaviors
+> - Fixed item freezing when hovered over droppable targets
 > #### Changes in Version 2.3.0
 > - **AutoScroll Support**: Scroll parent/ancestor ScrollViewer viewports automatically when dragging near edges.
 > - **ListBox Compatibility**: Supports native `ListBox` (and `SelectingItemsControl` derivatives) with selection persistence.
