@@ -349,6 +349,7 @@ public partial class Sortable
     private static Point _dragStartPoint;
     private static Canvas? _overlayCanvas; // Canvas for drag preview
     private static Border? _dragProxy; // Content inside the overlay
+    private static ContentPresenter? _sameCollectionPlaceholder;
     private static ContentPresenter? _crossCollectionPlaceholder; // Uses target ItemTemplate for cross-collection preview
     private static RenderTargetBitmap? _dragProxyBitmap; // Snapshot used by the drag proxy
     private static Point _dragProxyOffset; // Offset from pointer to proxy top-left
