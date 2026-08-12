@@ -923,8 +923,6 @@ public partial class Sortable
         }
 
         var container = _currentItemsControl != null ? FindItemContainer(_currentItemsControl, _draggedElement) : null;
-        var panel = container?.FindAncestorOfType<Panel>() ?? activePanel;
-
         // --- FIX: Recalculate _originalIndex to match the current index of the grabbed container ---
         _originalIndex = container != null ? LogicalChildren.IndexOf(container) : -1;
 
@@ -963,6 +961,7 @@ public partial class Sortable
             if (!_isSortableOnly)
             {
                 // Not sortable, don't show preview
+                HideSameCollectionPlaceholder();
                 HideCrossCollectionPlaceholder();
                 return;
             }
@@ -970,10 +969,15 @@ public partial class Sortable
             // Continue with normal drag within original ItemsControl.
             if (topLevel != null)
             {
-                var currentPosition = GetPosition(e, panel, topLevel);
-                var draggedVirtualBounds = container.Bounds.Translate(currentPosition - _dragStartPoint);
-                var draggedCenter = GetBoundsCenter(draggedVirtualBounds);
-                hoverIndex = FindClosestSlot(draggedCenter, includeTerminalSlot: true);
+                // SlotBounds are expressed in ItemsPanelRoot coordinates, so the
+                // drag proxy must be translated into that exact same coordinate system.
+                // A container can contain nested template panels whose coordinates
+                // are unrelated to SlotBounds.
+                var draggedCenter = GetDragProxyCenter(activePanel, topLevel);
+                // Same-collection operations target a final item slot (0..Count-1),
+                // not an insertion gap (0..Count). Gap semantics make a card move
+                // one place too far as soon as its center crosses the target midpoint.
+                hoverIndex = FindClosestSlot(draggedCenter, includeTerminalSlot: false);
 
                 hoverIndex = Math.Max(0, Math.Min(hoverIndex, LogicalChildren.Count));
 
@@ -987,12 +991,26 @@ public partial class Sortable
 
         if (isCrossCollection)
         {
+            HideSameCollectionPlaceholder();
             UpdateCrossCollectionPlaceholder();
         }
         else
         {
             HideCrossCollectionPlaceholder();
+            UpdateSameCollectionPlaceholder();
         }
+    }
+
+    private static Point GetDragProxyCenter(Visual relativeTo, TopLevel topLevel)
+    {
+        var proxyWidth = _dragProxy is { Width: > 0 } ? _dragProxy.Width : _draggedElement?.Bounds.Width ?? 0d;
+        var proxyHeight = _dragProxy is { Height: > 0 } ? _dragProxy.Height : _draggedElement?.Bounds.Height ?? 0d;
+        var proxyCenterInTopLevel = new Point(
+            _lastPointerPositionInTopLevel.X + _dragProxyOffset.X + proxyWidth / 2,
+            _lastPointerPositionInTopLevel.Y + _dragProxyOffset.Y + proxyHeight / 2);
+
+        return topLevel.TranslatePoint(proxyCenterInTopLevel, relativeTo) ??
+               GetPosition(null, relativeTo, topLevel);
     }
 
     private static bool IsValidCrossCollectionTarget(ItemsControl itemsControl)
@@ -1179,7 +1197,11 @@ public partial class Sortable
         {
             child.Transitions = null;
             child.RenderTransform = TransformOperations.Parse("none");
+            child.Opacity = 1.0;
+            child.ZIndex = 0;
         }
+
+        HideSameCollectionPlaceholder();
 
         _currentItemsControl = newItemsControl;
         _targetCollection = newItemsControl.ItemsSource as IList;
@@ -1238,6 +1260,7 @@ public partial class Sortable
         else
         {
             HideCrossCollectionPlaceholder();
+            UpdateSameCollectionPlaceholder();
         }
     }
 
@@ -1423,7 +1446,7 @@ public partial class Sortable
             return FindInsertionIndexByAxis(center, useVerticalAxis: false);
         }
 
-        return FindInsertionIndexByNearestPath(center);
+        return FindInsertionIndexByFlowLines(center);
     }
 
     private static int FindClosestExistingSlot(Point center)
@@ -1468,81 +1491,194 @@ public partial class Sortable
         return SlotBounds.Count;
     }
 
-    private static int FindInsertionIndexByNearestPath(Point position)
+    private readonly struct FlowLine
     {
-        int closestIndex = 0;
-        double minDistance = double.MaxValue;
-
-        for (int i = 0; i < SlotBounds.Count; i++)
+        public FlowLine(int startIndex, int endIndex, double crossStart, double crossEnd)
         {
-            var slotCenter = GetBoundsCenter(SlotBounds[i]);
-            var dx = position.X - slotCenter.X;
-            var dy = position.Y - slotCenter.Y;
-            var distance = (dx * dx) + (dy * dy);
+            StartIndex = startIndex;
+            EndIndex = endIndex;
+            CrossStart = crossStart;
+            CrossEnd = crossEnd;
+        }
 
-            if (distance < minDistance)
+        public int StartIndex { get; }
+        public int EndIndex { get; }
+        public double CrossStart { get; }
+        public double CrossEnd { get; }
+    }
+
+    private static int FindInsertionIndexByFlowLines(Point position)
+    {
+        var horizontalFlow = IsHorizontalFlowLayout();
+        var lines = BuildFlowLines(horizontalFlow);
+        if (lines.Count == 0)
+        {
+            return 0;
+        }
+
+        var pointerCross = horizontalFlow ? position.Y : position.X;
+        var closestLineIndex = 0;
+        var closestLineDistance = double.MaxValue;
+
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var line = lines[i];
+            var distance = pointerCross < line.CrossStart
+                ? line.CrossStart - pointerCross
+                : pointerCross > line.CrossEnd
+                    ? pointerCross - line.CrossEnd
+                    : 0d;
+
+            if (distance < closestLineDistance)
             {
-                minDistance = distance;
-                closestIndex = i;
+                closestLineDistance = distance;
+                closestLineIndex = i;
             }
         }
 
-        if (SlotBounds.Count == 1)
+        var closestLine = lines[closestLineIndex];
+
+        // Positions before the first line or after the last line are unambiguous,
+        // regardless of their primary-axis coordinate.
+        if (closestLineIndex == 0 && pointerCross < closestLine.CrossStart)
         {
-            var onlyCenter = GetBoundsCenter(SlotBounds[0]);
-            return position.Y >= onlyCenter.Y ? 1 : 0;
+            return closestLine.StartIndex;
         }
 
-        var currentCenter = GetBoundsCenter(SlotBounds[closestIndex]);
-        Vector flowDirection;
-
-        if (closestIndex == 0)
+        if (closestLineIndex == lines.Count - 1 && pointerCross > closestLine.CrossEnd)
         {
-            var nextCenter = GetBoundsCenter(SlotBounds[1]);
-            flowDirection = nextCenter - currentCenter;
-        }
-        else if (closestIndex == SlotBounds.Count - 1)
-        {
-            var previousCenter = GetBoundsCenter(SlotBounds[closestIndex - 1]);
-            flowDirection = currentCenter - previousCenter;
-        }
-        else
-        {
-            var previousCenter = GetBoundsCenter(SlotBounds[closestIndex - 1]);
-            var nextCenter = GetBoundsCenter(SlotBounds[closestIndex + 1]);
-            flowDirection = nextCenter - previousCenter;
+            return closestLine.EndIndex;
         }
 
-        var toPointer = position - currentCenter;
-        var isAfterClosest = (toPointer.X * flowDirection.X) + (toPointer.Y * flowDirection.Y) >= 0;
-        var insertionIndex = isAfterClosest ? closestIndex + 1 : closestIndex;
+        var pointerPrimary = horizontalFlow ? position.X : position.Y;
+        var firstCenter = GetPrimaryCenter(SlotBounds[closestLine.StartIndex], horizontalFlow);
+        var lastCenter = GetPrimaryCenter(SlotBounds[closestLine.EndIndex - 1], horizontalFlow);
+        var ascending = lastCenter >= firstCenter;
 
-        return Math.Max(0, Math.Min(insertionIndex, SlotBounds.Count));
+        for (var i = closestLine.StartIndex; i < closestLine.EndIndex; i++)
+        {
+            var midpoint = GetPrimaryCenter(SlotBounds[i], horizontalFlow);
+            if ((ascending && pointerPrimary < midpoint) || (!ascending && pointerPrimary > midpoint))
+            {
+                return i;
+            }
+        }
+
+        return closestLine.EndIndex;
     }
+
+    private static List<FlowLine> BuildFlowLines(bool horizontalFlow)
+    {
+        var lines = new List<FlowLine>();
+        if (SlotBounds.Count == 0)
+        {
+            return lines;
+        }
+
+        var lineStartIndex = 0;
+        var lineCrossStart = GetCrossStart(SlotBounds[0], horizontalFlow);
+        var lineCrossEnd = GetCrossEnd(SlotBounds[0], horizontalFlow);
+
+        for (var i = 1; i < SlotBounds.Count; i++)
+        {
+            var slotCrossStart = GetCrossStart(SlotBounds[i], horizontalFlow);
+            var slotCrossEnd = GetCrossEnd(SlotBounds[i], horizontalFlow);
+            var overlapsCurrentLine = slotCrossStart < lineCrossEnd - 0.5 &&
+                                      slotCrossEnd > lineCrossStart + 0.5;
+
+            if (!overlapsCurrentLine)
+            {
+                lines.Add(new FlowLine(lineStartIndex, i, lineCrossStart, lineCrossEnd));
+                lineStartIndex = i;
+                lineCrossStart = slotCrossStart;
+                lineCrossEnd = slotCrossEnd;
+                continue;
+            }
+
+            lineCrossStart = Math.Min(lineCrossStart, slotCrossStart);
+            lineCrossEnd = Math.Max(lineCrossEnd, slotCrossEnd);
+        }
+
+        lines.Add(new FlowLine(lineStartIndex, SlotBounds.Count, lineCrossStart, lineCrossEnd));
+        return lines;
+    }
+
+    private static bool IsHorizontalFlowLayout()
+    {
+        if (_currentPanel is WrapPanel wrapPanel)
+        {
+            return wrapPanel.Orientation == global::Avalonia.Layout.Orientation.Horizontal;
+        }
+
+        // Multi-column panels used by the control are normally row-major.
+        // Infer column-major layouts when the first two realized slots share a column.
+        if (SlotBounds.Count >= 2)
+        {
+            var first = SlotBounds[0];
+            var second = SlotBounds[1];
+            var sameRow = Math.Abs(first.Y - second.Y) < 5;
+            var sameColumn = Math.Abs(first.X - second.X) < 5;
+            if (sameColumn && !sameRow)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static double GetPrimaryCenter(Rect bounds, bool horizontalFlow) =>
+        horizontalFlow ? bounds.X + bounds.Width / 2 : bounds.Y + bounds.Height / 2;
+
+    private static double GetCrossStart(Rect bounds, bool horizontalFlow) =>
+        horizontalFlow ? bounds.Top : bounds.Left;
+
+    private static double GetCrossEnd(Rect bounds, bool horizontalFlow) =>
+        horizontalFlow ? bounds.Bottom : bounds.Right;
 
     private static void UpdatePreviewLayout()
     {
         var animationDuration = GetAnimationDurationSpan(_currentItemsControl);
         bool isCrossSwap = IsCrossCollectionSwapMode();
+        bool isSameCollectionSort = IsSameCollectionSortPreview();
+        var previewDuration = isSameCollectionSort && _currentPanel is WrapPanel
+            ? TimeSpan.Zero
+            : animationDuration;
 
         for (int i = 0; i < LogicalChildren.Count; i++)
         {
             int previewIndex = MapItemIndexToPreviewSlot(i);
-            ApplyPreviewTransform(LogicalChildren[i], i, previewIndex, animationDuration);
+            ApplyPreviewTransform(LogicalChildren[i], i, previewIndex, previewDuration);
             
             // In cross-collection swap mode, dim the target item that will be swapped out
             if (isCrossSwap && i == _currentIndex && _currentIndex < LogicalChildren.Count)
             {
                 LogicalChildren[i].Opacity = PlaceholderOpacity;
             }
-            else if (Math.Abs(LogicalChildren[i].Opacity - 1.0) > 0.01)
+            else if (isSameCollectionSort && i == _originalIndex && _originalIndex >= 0)
+            {
+                // WrapPanel siblings move immediately to fill this source slot;
+                // the independent overlay renders the destination placeholder.
+                LogicalChildren[i].Opacity = 0.0;
+                LogicalChildren[i].ZIndex = 0;
+            }
+            else
             {
                 // Restore full opacity for items not being swapped
                 LogicalChildren[i].Opacity = 1.0;
+                LogicalChildren[i].ZIndex = isSameCollectionSort ? 1 : 0;
             }
         }
 
         UpdateCrossCollectionPanelReserve();
+    }
+
+    private static bool IsSameCollectionSortPreview()
+    {
+        return ReferenceEquals(_sourceCollection, _targetCollection) &&
+               _originalIndex >= 0 &&
+               _currentItemsControl != null &&
+               GetMode(_currentItemsControl) == SortableMode.Sort;
     }
 
     private static int MapItemIndexToPreviewSlot(int index)
@@ -1590,7 +1726,9 @@ public partial class Sortable
         // Sort mode (default): the dragged item's translucent placeholder follows insertion slot.
         if (index == _originalIndex)
         {
-            return _currentIndex;
+            // Keep the real container faded in its layout slot. A separate overlay
+            // displays the destination placeholder at _currentIndex.
+            return index;
         }
 
         if (_originalIndex < _currentIndex)
@@ -1726,58 +1864,49 @@ public partial class Sortable
 
     private static Rect CalculateNextMultiColumnSlot(Rect lastSlot)
     {
-        if (SlotBounds.Count < 2)
+        var horizontalFlow = IsHorizontalFlowLayout();
+        var lines = BuildFlowLines(horizontalFlow);
+        if (lines.Count == 0 || _currentPanel == null)
         {
-            // Not enough data, assume vertical stacking
-            return new Rect(
-                lastSlot.X,
-                lastSlot.Y + lastSlot.Height + GetVerticalSpacing(),
-                lastSlot.Width,
-                lastSlot.Height
-            );
+            return lastSlot;
         }
 
-        // Analyze the layout to determine column count and positioning
-        var firstSlot = SlotBounds[0];
-        var columnCount = 1;
-        var horizontalSpacing = GetHorizontalSpacing();
-        var verticalSpacing = GetVerticalSpacing();
+        var itemSpacing = _currentPanel is WrapPanel wrapPanel
+            ? Math.Max(0d, wrapPanel.ItemSpacing)
+            : horizontalFlow ? GetHorizontalSpacing() : GetVerticalSpacing();
+        var lineSpacing = _currentPanel is WrapPanel wrap
+            ? Math.Max(0d, wrap.LineSpacing)
+            : horizontalFlow ? GetVerticalSpacing() : GetHorizontalSpacing();
+        var targetWidth = Math.Max(1d, _draggedElement?.Bounds.Width ?? lastSlot.Width);
+        var targetHeight = Math.Max(1d, _draggedElement?.Bounds.Height ?? lastSlot.Height);
+        var lastLine = lines[^1];
 
-        // Count items in the first row (same Y position, within tolerance)
-        for (int i = 1; i < SlotBounds.Count; i++)
+        if (horizontalFlow)
         {
-            if (Math.Abs(SlotBounds[i].Y - firstSlot.Y) < 5)
+            var candidateX = lastSlot.Right + itemSpacing;
+            if (candidateX + targetWidth <= _currentPanel.Bounds.Width + 0.5)
             {
-                columnCount++;
+                return new Rect(candidateX, lastSlot.Y, targetWidth, targetHeight);
             }
-            else
-            {
-                break;
-            }
-        }
 
-        // Determine which column position for the next slot
-        var currentColumn = SlotBounds.Count % columnCount;
-
-        if (currentColumn == 0)
-        {
-            // First column of new row - position below the item directly above
-            var itemAbove = SlotBounds[SlotBounds.Count - columnCount];
             return new Rect(
-                itemAbove.X,
-                lastSlot.Y + lastSlot.Height + verticalSpacing,
-                lastSlot.Width,
-                lastSlot.Height
-            );
+                SlotBounds[0].X,
+                lastLine.CrossEnd + lineSpacing,
+                targetWidth,
+                targetHeight);
         }
 
-        // Continue on the same row - position to the right
+        var candidateY = lastSlot.Bottom + itemSpacing;
+        if (candidateY + targetHeight <= _currentPanel.Bounds.Height + 0.5)
+        {
+            return new Rect(lastSlot.X, candidateY, targetWidth, targetHeight);
+        }
+
         return new Rect(
-            lastSlot.X + lastSlot.Width + horizontalSpacing,
-            lastSlot.Y,
-            lastSlot.Width,
-            lastSlot.Height
-        );
+            lastLine.CrossEnd + lineSpacing,
+            SlotBounds[0].Y,
+            targetWidth,
+            targetHeight);
     }
 
     private enum PanelLayoutType
@@ -1789,7 +1918,7 @@ public partial class Sortable
 
     private static PanelLayoutType DetectPanelLayout()
     {
-        if (_currentPanel == null || SlotBounds.Count < 2)
+        if (_currentPanel == null)
         {
             return PanelLayoutType.VerticalStack;
         }
@@ -1800,6 +1929,18 @@ public partial class Sortable
             return stackPanel.Orientation == global::Avalonia.Layout.Orientation.Horizontal
                 ? PanelLayoutType.HorizontalStack
                 : PanelLayoutType.VerticalStack;
+        }
+
+        // A WrapPanel remains a two-dimensional flow even while it currently has
+        // only one line. An incoming item can still create the next line.
+        if (_currentPanel is WrapPanel)
+        {
+            return PanelLayoutType.MultiColumn;
+        }
+
+        if (SlotBounds.Count < 2)
+        {
+            return PanelLayoutType.VerticalStack;
         }
 
         // For other panel types, analyze the actual layout
@@ -2056,6 +2197,65 @@ public partial class Sortable
         Canvas.SetTop(_crossCollectionPlaceholder, top);
     }
 
+    private static void UpdateSameCollectionPlaceholder()
+    {
+        if (!IsSameCollectionSortPreview() ||
+            _overlayCanvas == null ||
+            _draggedElement == null ||
+            _currentPanel == null ||
+            _currentIndex < 0)
+        {
+            HideSameCollectionPlaceholder();
+            return;
+        }
+
+        var topLevel = TopLevel.GetTopLevel(_draggedElement);
+        if (topLevel == null)
+        {
+            HideSameCollectionPlaceholder();
+            return;
+        }
+
+        var panelPosition = _currentPanel.TranslatePoint(new Point(0, 0), topLevel);
+        if (!panelPosition.HasValue)
+        {
+            HideSameCollectionPlaceholder();
+            return;
+        }
+
+        if (_sameCollectionPlaceholder == null)
+        {
+            _sameCollectionPlaceholder = new ContentPresenter
+            {
+                Opacity = PlaceholderOpacity,
+                IsHitTestVisible = false
+            };
+
+            // Keep the placeholder behind the opaque drag proxy.
+            _overlayCanvas.Children.Insert(0, _sameCollectionPlaceholder);
+        }
+
+        _sameCollectionPlaceholder.Content = _draggedData;
+        _sameCollectionPlaceholder.ContentTemplate = _currentItemsControl?.ItemTemplate;
+
+        var targetSlot = GetInsertionPreviewRect();
+        _sameCollectionPlaceholder.Width = Math.Max(1d, targetSlot.Width);
+        _sameCollectionPlaceholder.Height = Math.Max(1d, targetSlot.Height);
+
+        var left = SnapToDevicePixels(panelPosition.Value.X + targetSlot.X, topLevel.RenderScaling);
+        var top = SnapToDevicePixels(panelPosition.Value.Y + targetSlot.Y, topLevel.RenderScaling);
+        Canvas.SetLeft(_sameCollectionPlaceholder, left);
+        Canvas.SetTop(_sameCollectionPlaceholder, top);
+
+        // The real container keeps WrapPanel measurement stable while the shifted
+        // sibling fills its source slot and this presenter marks the destination.
+        if (_originalIndex >= 0 && _originalIndex < LogicalChildren.Count)
+        {
+            LogicalChildren[_originalIndex].Opacity = 0.0;
+            LogicalChildren[_originalIndex].ZIndex = 0;
+        }
+    }
+
     private static Rect? TryGetCrossCollectionViewportRect(TopLevel topLevel)
     {
         if (_currentItemsControl is not Visual currentVisual)
@@ -2127,13 +2327,27 @@ public partial class Sortable
         _crossCollectionPlaceholder = null;
     }
 
+    private static void HideSameCollectionPlaceholder()
+    {
+        if (_sameCollectionPlaceholder == null)
+        {
+            return;
+        }
+
+        _overlayCanvas?.Children.Remove(_sameCollectionPlaceholder);
+        _sameCollectionPlaceholder = null;
+    }
+
     private static void CleanupProxyTransforms(Control? container)
     {
+        HideSameCollectionPlaceholder();
+
         foreach (var child in LogicalChildren)
         {
             child.Transitions = null;
             child.RenderTransform = TransformOperations.Parse("none");
             child.Opacity = 1.0; // Restore full opacity
+            child.ZIndex = 0;
         }
 
         ClearCrossCollectionPanelReserve();
@@ -2157,6 +2371,7 @@ public partial class Sortable
         // Remove overlay canvas from whichever host currently contains it.
         if (_overlayCanvas != null)
         {
+            HideSameCollectionPlaceholder();
             HideCrossCollectionPlaceholder();
 
             if (_overlayCanvas.Parent is Panel parentPanel)
@@ -2331,6 +2546,7 @@ public partial class Sortable
         _currentPanel = null;
         _overlayCanvas = null;
         _dragProxy = null;
+        _sameCollectionPlaceholder = null;
         _crossCollectionPlaceholder = null;
         _isSortableOnly = false;
         LogicalChildren.Clear();
@@ -2384,4 +2600,3 @@ public partial class Sortable
         }
     }
 }
-
