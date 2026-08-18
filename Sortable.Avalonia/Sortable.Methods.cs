@@ -2485,6 +2485,7 @@ public partial class Sortable
         {
             Item = _draggedData,
             OldIndex = _originalIndex,
+            LastPreviewedIndex = _currentIndex,
             SourceCollection = _sourceCollection,
         };
 

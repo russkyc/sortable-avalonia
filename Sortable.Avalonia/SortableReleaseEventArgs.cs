@@ -24,6 +24,10 @@ public class SortableReleaseEventArgs
     /// </summary>
     public int OldIndex { get; set; }
 
+    /// <summary>
+    /// The last previewed index of the item in the source collection.
+    /// </summary>
+    public int LastPreviewedIndex { get; set; }
 }
 
 
