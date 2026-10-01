@@ -24,6 +24,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
@@ -31,6 +32,7 @@ using Avalonia.Controls.Presenters;
 using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Sortable.Avalonia.Internal;
 
 namespace Sortable.Avalonia;
 
@@ -335,10 +337,11 @@ public partial class Sortable
     private const int ProgrammaticPairingWindowMs = 750;
 
     // Tracks Sortable-enabled ItemsControls so programmatic ItemsSource changes can be animated.
-    private static readonly HashSet<ItemsControl> TrackedItemsControls = new();
-    private static readonly Dictionary<ItemsControl, NotifyCollectionChangedEventHandler> CollectionHandlers = new();
-    private static readonly Dictionary<ItemsControl, INotifyCollectionChanged> ObservedCollections = new();
-    private static readonly Dictionary<ItemsControl, Dictionary<object, Rect>> LastStableBounds = new();
+    // Weak keys ensure detached/discarded views (e.g. tab switching) do not leak through static state.
+    private static readonly WeakControlSet TrackedItemsControls = new();
+    private static readonly ConditionalWeakTable<ItemsControl, NotifyCollectionChangedEventHandler> CollectionHandlers = new();
+    private static readonly ConditionalWeakTable<ItemsControl, INotifyCollectionChanged> ObservedCollections = new();
+    private static readonly ConditionalWeakTable<ItemsControl, Dictionary<object, Rect>> LastStableBounds = new();
     private static readonly List<ProgrammaticRemovalSnapshot> PendingProgrammaticRemovals = new();
 
     // STATE

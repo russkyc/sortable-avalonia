@@ -119,14 +119,27 @@ public partial class Sortable
             return;
         }
 
+        // Keep tracking so tab content that gets detached/re-attached resumes automatically,
+        // but release everything that would root a discarded view
+        ReleaseCollectionSubscription(itemsControl);
+        LastStableBounds.Remove(itemsControl);
+        PendingProgrammaticRemovals.RemoveAll(snapshot => ReferenceEquals(snapshot.SourceItemsControl, itemsControl));
+
         if (!ShouldTrackProgrammaticAnimations(itemsControl))
         {
-            // No longer tracking, so just return (helper will handle detachment)
-            return;
+            // Helper will fully detach the visual-tree handlers.
+            SortableEventHandlerHelper.DetachProgrammaticAnimationTracking(
+                itemsControl,
+                TrackedItemsControls,
+                ObservedCollections,
+                CollectionHandlers,
+                LastStableBounds,
+                PendingProgrammaticRemovals,
+                OnTrackedItemsControlPropertyChanged,
+                OnTrackedItemsControlAttached,
+                OnTrackedItemsControlDetached,
+                OnTrackedItemsControlLayoutUpdated);
         }
-
-        // Keep tracking for tab content that gets detached/re-attached; just reset stale geometry.
-        LastStableBounds.Remove(itemsControl);
     }
 
     private static void OnTrackedItemsControlLayoutUpdated(object? sender, EventArgs e)
@@ -144,7 +157,7 @@ public partial class Sortable
         var currentBounds = CaptureItemBounds(itemsControl);
         if (currentBounds.Count > 0)
         {
-            LastStableBounds[itemsControl] = currentBounds;
+            LastStableBounds.AddOrUpdate(itemsControl, currentBounds);
         }
     }
 
@@ -173,14 +186,7 @@ public partial class Sortable
 
     private static void RefreshCollectionSubscription(ItemsControl itemsControl)
     {
-        if (ObservedCollections.TryGetValue(itemsControl, out var existingCollection) &&
-            CollectionHandlers.TryGetValue(itemsControl, out var existingHandler))
-        {
-            existingCollection.CollectionChanged -= existingHandler;
-        }
-
-        ObservedCollections.Remove(itemsControl);
-        CollectionHandlers.Remove(itemsControl);
+        ReleaseCollectionSubscription(itemsControl);
 
         if (itemsControl.ItemsSource is not INotifyCollectionChanged observableCollection)
         {
@@ -191,8 +197,20 @@ public partial class Sortable
             OnTrackedCollectionChanged(itemsControl, args);
 
         observableCollection.CollectionChanged += handler;
-        ObservedCollections[itemsControl] = observableCollection;
-        CollectionHandlers[itemsControl] = handler;
+        ObservedCollections.AddOrUpdate(itemsControl, observableCollection);
+        CollectionHandlers.AddOrUpdate(itemsControl, handler);
+    }
+
+    private static void ReleaseCollectionSubscription(ItemsControl itemsControl)
+    {
+        if (ObservedCollections.TryGetValue(itemsControl, out var existingCollection) &&
+            CollectionHandlers.TryGetValue(itemsControl, out var existingHandler))
+        {
+            existingCollection.CollectionChanged -= existingHandler;
+        }
+
+        ObservedCollections.Remove(itemsControl);
+        CollectionHandlers.Remove(itemsControl);
     }
 
     private static void OnTrackedCollectionChanged(ItemsControl itemsControl, NotifyCollectionChangedEventArgs args)
@@ -542,7 +560,7 @@ public partial class Sortable
                 DispatcherPriority.Render);
         }
 
-        LastStableBounds[itemsControl] = nowBounds;
+        LastStableBounds.AddOrUpdate(itemsControl, nowBounds);
     }
 
     private static void RefreshStableBoundsSnapshot(ItemsControl itemsControl)
@@ -552,7 +570,7 @@ public partial class Sortable
             return;
         }
 
-        LastStableBounds[itemsControl] = CaptureItemBounds(itemsControl);
+        LastStableBounds.AddOrUpdate(itemsControl, CaptureItemBounds(itemsControl));
     }
 
     private static Dictionary<object, Rect> CaptureItemBounds(ItemsControl itemsControl)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 
@@ -11,7 +12,7 @@ namespace Sortable.Avalonia.Internal
         // Methods and fields will be moved here from Sortable.Methods.cs
 
         public static void AttachProgrammaticAnimationTracking(ItemsControl itemsControl,
-            HashSet<ItemsControl> trackedItemsControls,
+            WeakControlSet trackedItemsControls,
             Action<ItemsControl> refreshCollectionSubscription,
             Action<ItemsControl> queueStableBoundsWarmup,
             EventHandler<AvaloniaPropertyChangedEventArgs> propertyChangedHandler,
@@ -36,10 +37,10 @@ namespace Sortable.Avalonia.Internal
         }
 
         public static void DetachProgrammaticAnimationTracking(ItemsControl itemsControl,
-            HashSet<ItemsControl> trackedItemsControls,
-            Dictionary<ItemsControl, INotifyCollectionChanged> observedCollections,
-            Dictionary<ItemsControl, NotifyCollectionChangedEventHandler> collectionHandlers,
-            Dictionary<ItemsControl, Dictionary<object, Rect>> lastStableBounds,
+            WeakControlSet trackedItemsControls,
+            ConditionalWeakTable<ItemsControl, INotifyCollectionChanged> observedCollections,
+            ConditionalWeakTable<ItemsControl, NotifyCollectionChangedEventHandler> collectionHandlers,
+            ConditionalWeakTable<ItemsControl, Dictionary<object, Rect>> lastStableBounds,
             List<ProgrammaticRemovalSnapshot> pendingProgrammaticRemovals,
             EventHandler<AvaloniaPropertyChangedEventArgs> propertyChangedHandler,
             EventHandler<VisualTreeAttachmentEventArgs> attachedHandler,
