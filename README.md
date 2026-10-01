@@ -17,6 +17,10 @@
 MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-and-drop reordering, cross-collection transfers, reversible drop operations, drag handles, sort/swap modes, and animated programmatic updates.
 
 > [!NOTE]
+> #### Changes in Version 2.4.0
+> - Added `LastPreviewedIndex` to `SortableReleaseEventArgs` for tracking the last previewed drop index on release.
+> - Fixed `WrapPanel` drop index calculation.
+> - Fixed memory retention of disposed objects via weak tracking.
 > #### Changes in Version 2.3.1
 > - Fixed issue with inconsistent droppable collection behaviors
 > - Fixed item freezing when hovered over droppable targets
@@ -306,6 +310,7 @@ public class SortableReleaseEventArgs
 {
     public object? Item { get; set; }              // Item released
     public int OldIndex { get; set; }              // Original index
+    public int LastPreviewedIndex { get; set; }    // Last previewed index in the source collection
     public IList? SourceCollection { get; set; }   // Collection item was dragged from
 }
 ```

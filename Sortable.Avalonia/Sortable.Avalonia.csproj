@@ -13,8 +13,8 @@
         <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Sortable.Avalonia</PackageId>
-        <Version>2.3.1</Version>
-        <PackageReleaseNotes>Fix inconsistent droppable collection behavior and item freezing</PackageReleaseNotes>
+        <Version>2.4.0</Version>
+        <PackageReleaseNotes>Add LastPreviewedIndex to SortableReleaseEventArgs; fix WrapPanel drop index calculation and memory retention of disposed objects</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 
