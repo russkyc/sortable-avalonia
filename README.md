@@ -17,22 +17,14 @@
 MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-and-drop reordering, cross-collection transfers, reversible drop operations, drag handles, sort/swap modes, and animated programmatic updates.
 
 > [!NOTE]
-> #### Changes in Version 2.4.0
-> - Added `LastPreviewedIndex` to `SortableReleaseEventArgs` for tracking the last previewed drop index on release.
-> - Fixed `WrapPanel` drop index calculation.
-> - Fixed memory retention of disposed objects via weak tracking.
-> #### Changes in Version 2.3.1
-> - Fixed issue with inconsistent droppable collection behaviors
-> - Fixed item freezing when hovered over droppable targets
-> #### Changes in Version 2.3.0
-> - **AutoScroll Support**: Scroll parent/ancestor ScrollViewer viewports automatically when dragging near edges.
-> - **ListBox Compatibility**: Supports native `ListBox` (and `SelectingItemsControl` derivatives) with selection persistence.
-> - **AOT & GC Performance**: Full Ahead-of-Time compilation support (`IsAotCompatible`) and zero heap allocations on hot drag paths.
-> #### Changes in Version 2.2.0
-> - Package now targets NET 8.0 and NET 10.0 and now requires Avalonia 12.0+. Update your project references accordingly.
-> #### Changes in Version 2.0.0
-> - **Breaking change:** `AnimationDuration` now uses `TimeSpan` instead of `int` (milliseconds). Update your XAML and code to use TimeSpan format (e.g., `0:0:0.500`).
-> - **New feature:** Release behavior with `ReleaseCommand` and `SortableReleaseEventArgs` for handling items released outside valid drop targets.
+> #### Changes in Version 2.4.1
+> - Fixed inconsistent touch drag behavior: only the pointer that starts a drag owns it, so additional fingers can no longer reset or end an active drag.
+> - Prevented ancestor gesture recognizers (such as a page back-swipe) from stealing pointer capture mid-drag.
+> - Fixed duplicate pointer-event subscriptions on controls that are both `Sortable` and `Droppable`.
+> - Fixed a stuck pressed state when a drag surface is detached mid-drag.
+> - `ScrollViewer` is now treated as an interactive origin, preventing accidental drags from scrollable content.
+>
+> See [CHANGELOG](CHANGELOG.md) for older releases and the full version history.
 
 ## Overview
 
@@ -52,7 +44,7 @@ MVVM-first attached-behavior library for Avalonia `ItemsControl` enabling drag-a
 - [Animation Control](#animation-control)
 - [Custom Drag Template](#custom-drag-template)
 - [Groups](#groups)
-- [18 Demo Scenarios](#18-demo-scenarios)
+- [19 Demo Scenarios](#19-demo-scenarios)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
@@ -321,7 +313,7 @@ public class SortableReleaseEventArgs
 [RelayCommand]
 void Release(SortableReleaseEventArgs e)
 {
-    Debug.WriteLine($"Item '{e.Item}' released at index {e.OldIndex} from collection {e.SourceCollection}");
+    Debug.WriteLine($"Item '{e.Item}' released from index {e.OldIndex} at last previewed index {e.LastPreviewedIndex}");
     // Custom logic for when an item is released outside any valid drop target
 }
 ```
