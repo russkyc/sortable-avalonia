@@ -13,8 +13,8 @@
         <RepositoryUrl>https://github.com/russkyc/sortable-avalonia</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Sortable.Avalonia</PackageId>
-        <Version>2.4.0</Version>
-        <PackageReleaseNotes>Add LastPreviewedIndex to SortableReleaseEventArgs; fix WrapPanel drop index calculation and memory retention of disposed objects</PackageReleaseNotes>
+        <Version>2.4.1</Version>
+        <PackageReleaseNotes>Fixed inconsistent touch drag behavior</PackageReleaseNotes>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 

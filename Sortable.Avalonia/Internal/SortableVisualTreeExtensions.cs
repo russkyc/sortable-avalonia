@@ -31,7 +31,8 @@ namespace Sortable.Avalonia.Internal
                     current is TextBox ||
                     current is SelectingItemsControl ||
                     current is Slider ||
-                    current is ScrollBar)
+                    current is ScrollBar ||
+                    current is ScrollViewer)
                 {
                     return true;
                 }

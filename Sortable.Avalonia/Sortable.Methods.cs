@@ -618,6 +618,13 @@ public partial class Sortable
 
     private static void AttachEventHandlers(Control control)
     {
+        // Both IsSortable and IsDroppable changes can fire this; keep subscription idempotent so
+        // dual-mode controls don't process every pointer event twice.
+        control.PointerPressed -= OnPointerPressed;
+        control.PointerMoved -= OnPointerMoved;
+        control.PointerReleased -= OnPointerReleased;
+        control.PointerCaptureLost -= OnPointerCaptureLost;
+
         control.PointerPressed += OnPointerPressed;
         control.PointerMoved += OnPointerMoved;
         control.PointerReleased += OnPointerReleased;
@@ -630,11 +637,26 @@ public partial class Sortable
         control.PointerMoved -= OnPointerMoved;
         control.PointerReleased -= OnPointerReleased;
         control.PointerCaptureLost -= OnPointerCaptureLost;
+
+        // Detaching the drag surface mid-drag would otherwise leave _isPressed set forever,
+        // because the release/capture-lost handlers are gone and new presses are ignored.
+        if (ReferenceEquals(_draggedElement, control))
+        {
+            EndDrag();
+        }
     }
 
     private static void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (sender is not Control control) return;
+
+        // Only one pointer owns a drag at a time; extra fingers must not reset or end it.
+        // Also keep an extra finger from starting a page gesture (e.g. a back-swipe) mid-drag.
+        if (_isPressed)
+        {
+            e.PreventGestureRecognition();
+            return;
+        }
 
         // Only respond to primary button (left mouse button or touch)
         var properties = e.GetCurrentPoint(control).Properties;
@@ -679,6 +701,8 @@ public partial class Sortable
             }
         }
 
+        e.PreventGestureRecognition();
+        _activePointer = e.Pointer;
         e.Pointer.Capture(control);
         e.Handled = true;
     }
@@ -857,6 +881,14 @@ public partial class Sortable
     private static void OnPointerMoved(object? sender, PointerEventArgs e)
     {
         if (!_isPressed || _draggedElement == null) return;
+
+        // Ignore moves from other fingers while this drag is active.
+        if (_activePointer != null && !ReferenceEquals(e.Pointer, _activePointer)) return;
+
+        // Capture loss resets Pointer.IsGestureRecognitionSkipped, so re-assert it on every move.
+        // Without this an ancestor gesture recognizer (e.g. NavigationPage's back-swipe) can
+        // capture the pointer mid-drag and the control stops receiving PointerMoved.
+        e.PreventGestureRecognition();
 
         var topLevel = TopLevel.GetTopLevel(_draggedElement);
         if (topLevel == null) return;
@@ -2554,6 +2586,7 @@ public partial class Sortable
 
         _isPressed = false;
         _isDragging = false;
+        _activePointer = null;
         _draggedElement = null;
         _draggedData = null;
         _currentItemsControl = null;
@@ -2572,8 +2605,18 @@ public partial class Sortable
         SlotBounds.Clear();
     }
 
-    private static void OnPointerReleased(object? sender, PointerReleasedEventArgs e) => EndDrag();
-    private static void OnPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e) => EndDrag();
+    private static void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_activePointer != null && !ReferenceEquals(e.Pointer, _activePointer)) return;
+        EndDrag();
+    }
+
+    private static void OnPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        // PointerCaptureLost is a Direct event, so this only fires on the element that held capture.
+        if (_activePointer != null && !ReferenceEquals(e.Pointer, _activePointer)) return;
+        EndDrag();
+    }
 
     private static void EndDrag()
     {

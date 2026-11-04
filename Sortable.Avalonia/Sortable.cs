@@ -29,6 +29,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -346,6 +347,7 @@ public partial class Sortable
 
     // STATE
     private static bool _isPressed;
+    private static IPointer? _activePointer; // Pointer that owns the current drag (multi-touch guard)
     private static bool _isDragging;
     private static bool _outsideDroppableAndSortableBounds;
     private static Control? _draggedElement;
